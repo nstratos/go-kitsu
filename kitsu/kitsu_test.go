@@ -1,6 +1,7 @@
 package kitsu
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/url"
 	"testing"
@@ -47,5 +48,33 @@ func TestClient_NewRequest_badURL(t *testing.T) {
 	}
 	if err, ok := err.(*url.Error); !ok || err.Op != "parse" {
 		t.Errorf("Expected URL parse error, got %+v", err)
+	}
+}
+
+func TestClient_NewRequest_badBody(t *testing.T) {
+	c := NewClient(nil)
+
+	type Foo struct {
+		Bar map[interface{}]interface{}
+	}
+	inBody := &Foo{}
+	_, err := c.NewRequest("GET", "/", inBody)
+
+	if err == nil {
+		t.Errorf("NewRequest(%#v) should return err", inBody)
+	}
+	if err, ok := err.(*json.UnsupportedTypeError); !ok {
+		t.Errorf("Expected JSON Unsupported type error, got %#v.", err)
+	}
+}
+
+func TestClient_NewRequest_emptyBody(t *testing.T) {
+	c := NewClient(nil)
+	req, err := c.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatalf("NewRequest with empty body returned error: %v", err)
+	}
+	if req.Body != nil {
+		t.Fatalf("NewRequest with empty body should construct request with nil Body")
 	}
 }
