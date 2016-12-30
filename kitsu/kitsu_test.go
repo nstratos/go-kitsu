@@ -2,10 +2,41 @@ package kitsu
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 )
+
+var (
+	// client is the kitsu client used for these tests.
+	client *Client
+
+	// server is a test HTTP server that is being started on each test with
+	// setup() to provide mock API responses.
+	server *httptest.Server
+
+	// mux is the HTTP request multiplexer that the test HTTP server uses.
+	mux *http.ServeMux
+)
+
+func setup() {
+	// Starting new test server with mux as its multiplexer.
+	mux = http.NewServeMux()
+	server = httptest.NewServer(mux)
+
+	// Configuring kitsu.Client to use the test HTTP server URL.
+	client = NewClient(nil)
+	client.BaseURL, _ = url.Parse(server.URL)
+}
+
+// teardown closes the test HTTP server.
+func teardown() {
+	server.Close()
+}
 
 func TestNewClient(t *testing.T) {
 	c := NewClient(nil)
@@ -76,5 +107,30 @@ func TestClient_NewRequest_emptyBody(t *testing.T) {
 	}
 	if req.Body != nil {
 		t.Fatalf("NewRequest with empty body should construct request with nil Body")
+	}
+}
+
+func TestClient_Do(t *testing.T) {
+	setup()
+	defer teardown()
+
+	type foo struct {
+		Bar string `json:"bar"`
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if m := "GET"; m != r.Method {
+			t.Errorf("Request method = %v, want %v", r.Method, m)
+		}
+		fmt.Fprint(w, `{"bar":"foo"}`)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	body := new(foo)
+	client.Do(req, body)
+
+	want := &foo{Bar: "foo"}
+	if !reflect.DeepEqual(body, want) {
+		t.Errorf("Response body = %v, want %v", body, want)
 	}
 }

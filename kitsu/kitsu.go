@@ -73,3 +73,22 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 
 	return req, nil
 }
+
+// Do sends an API request and returns the API response. If an API error has
+// occurred both the response and the error will be returned in case the caller
+// wishes to further inspect the response. If v is passed as an argument, then
+// the API response is JSON decoded and stored to v.
+func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if v != nil {
+		err = json.NewDecoder(resp.Body).Decode(v)
+	}
+
+	return resp, err
+}
