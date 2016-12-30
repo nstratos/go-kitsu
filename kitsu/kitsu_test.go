@@ -106,7 +106,7 @@ func TestClient_NewRequest_emptyBody(t *testing.T) {
 		t.Fatalf("NewRequest with empty body returned error: %v", err)
 	}
 	if req.Body != nil {
-		t.Fatalf("NewRequest with empty body should construct request with nil Body")
+		t.Fatalf("NewRequest with empty body should construct request with nil Body.")
 	}
 }
 
@@ -127,10 +127,59 @@ func TestClient_Do(t *testing.T) {
 
 	req, _ := client.NewRequest("GET", "/", nil)
 	body := new(foo)
-	client.Do(req, body)
+	_, _ = client.Do(req, body)
 
 	want := &foo{Bar: "foo"}
 	if !reflect.DeepEqual(body, want) {
 		t.Errorf("Response body = %v, want %v", body, want)
+	}
+}
+
+func TestClient_Do_httpError(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"errors":[{"status":"400","title":"Bad Request"}]}`, http.StatusBadRequest)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	_, err := client.Do(req, nil)
+	if err == nil {
+		t.Error("Expected HTTP 400 error.")
+	}
+}
+
+func TestDo_redirectLoop(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusFound)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	_, err := client.Do(req, nil)
+
+	if err == nil {
+		t.Error("Expected error to be returned.")
+	}
+	if err, ok := err.(*url.Error); !ok {
+		t.Errorf("Expected URL error, got %#v.", err)
+	}
+}
+
+func TestErrorResponse_Error(t *testing.T) {
+	resp := &http.Response{Request: &http.Request{}}
+	err := ErrorResponse{Response: resp}
+	if err.Error() == "" {
+		t.Errorf("Expected non-empty ErrorResponse.Error()")
+	}
+}
+
+func TestError_Error(t *testing.T) {
+	err := Error{}
+	if err.Error() == "" {
+		t.Errorf("Expected non-empty Error.Error()")
 	}
 }

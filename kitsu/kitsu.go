@@ -3,7 +3,9 @@ package kitsu
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -86,9 +88,52 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 
 	defer resp.Body.Close()
 
+	err = checkResponse(resp)
+	if err != nil {
+		return resp, err
+	}
+
 	if v != nil {
 		err = json.NewDecoder(resp.Body).Decode(v)
 	}
-
 	return resp, err
+}
+
+// ErrorResponse reports one or more errors caused by an API request.
+type ErrorResponse struct {
+	Response *http.Response // HTTP response that caused this error
+	Errors   []Error        `json:"errors"`
+}
+
+func (r *ErrorResponse) Error() string {
+	return fmt.Sprintf("%v %v: %d %+v",
+		r.Response.Request.Method, r.Response.Request.URL,
+		r.Response.StatusCode, r.Errors)
+}
+
+// Error holds the details of each invidivual error in an ErrorResponse.
+//
+// JSON API docs: http://jsonapi.org/format/#error-objects
+type Error struct {
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+	Code   string `json:"code"`
+	Status string `json:"status"`
+}
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("%v: error %v: %v(%v)",
+		e.Status, e.Code, e.Title, e.Detail)
+}
+
+func checkResponse(r *http.Response) error {
+	if c := r.StatusCode; 200 <= c && c <= 299 {
+		return nil
+	}
+	errorResponse := &ErrorResponse{Response: r}
+	body, err := ioutil.ReadAll(r.Body)
+	if err == nil && body != nil {
+		json.Unmarshal(body, errorResponse)
+	}
+	return errorResponse
 }
