@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://kitsu.io/"
+	defaultBaseURL    = "https://kitsu.io/"
+	defaultAPIVersion = "api/edge/"
 
 	defaultMediaType = "application/vnd.api+json"
 )
@@ -23,6 +24,26 @@ type Client struct {
 	BaseURL *url.URL
 
 	common service
+
+	Anime *AnimeService
+}
+
+// Resource represent a JSON API resource object. It contains common fields
+// used by the Kitsu API resources like Anime and Manga.
+//
+// JSON API docs: http://jsonapi.org/format/#document-resource-objects
+type Resource struct {
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Links Link   `json:"links,omitempty"`
+}
+
+// Link represent links that may be contained by resource objects. According to
+// the current Kitsu API documentation, links are represented as a string.
+//
+// JSON API docs: http://jsonapi.org/format/#document-links
+type Link struct {
+	Self string `json:"self"`
 }
 
 // NewClient returns a new kitsu.io API client.
@@ -35,6 +56,8 @@ func NewClient(httpClient *http.Client) *Client {
 	c := &Client{client: httpClient, BaseURL: baseURL}
 
 	c.common.client = c
+
+	c.Anime = (*AnimeService)(&c.common)
 
 	return c
 }

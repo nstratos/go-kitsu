@@ -38,6 +38,12 @@ func teardown() {
 	server.Close()
 }
 
+func testMethod(t *testing.T, r *http.Request, want string) {
+	if got := r.Method; got != want {
+		t.Errorf("Request method: %v, want %v", got, want)
+	}
+}
+
 func TestNewClient(t *testing.T) {
 	c := NewClient(nil)
 
