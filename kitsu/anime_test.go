@@ -56,3 +56,28 @@ func TestAnimeService_Show_invalidID(t *testing.T) {
 		t.Errorf("Expected URL parse error, got %+v", err)
 	}
 }
+
+func TestAnimeService_List(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/"+defaultAPIVersion+"anime", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprintf(w, `{"data":[{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}},{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}]}`)
+	})
+
+	got, _, err := client.Anime.List()
+	if err != nil {
+		t.Errorf("Anime.List returned error: %v", err)
+	}
+
+	want := &AnimeListResponse{
+		Data: []*Anime{
+			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: AnimeAttributes{Slug: "attack-on-titan"}},
+			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: AnimeAttributes{Slug: "attack-on-titan"}},
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Anime.List returns \n%+v, want \n%+v", got, want)
+	}
+}

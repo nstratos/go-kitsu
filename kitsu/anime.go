@@ -47,16 +47,24 @@ func (s *AnimeService) Show(animeID string) (*AnimeShowResponse, *http.Response,
 	return a, resp, nil
 }
 
+// AnimeListResponse is the response returned by AnimeService.List which
+// contains many Anime.
+type AnimeListResponse struct {
+	Data []*Anime `json:"data"`
+}
 
-	req, err := s.client.NewRequest("GET", urlStr, nil)
+func (s *AnimeService) List() (*AnimeListResponse, *http.Response, error) {
+	u := defaultAPIVersion + "anime"
+
+	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	anime := new(AnimeShowResponse)
-	resp, err := s.client.Do(req, anime)
+	a := new(AnimeListResponse)
+	resp, err := s.client.Do(req, a)
 	if err != nil {
 		return nil, resp, err
 	}
-	return anime, resp, nil
+	return a, resp, nil
 }
