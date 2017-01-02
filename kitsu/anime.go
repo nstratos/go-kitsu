@@ -32,7 +32,21 @@ type AnimeAttributes struct {
 // Show returns details for a specific Anime by providing a unique identifier
 // of the anime e.g. 7442.
 func (s *AnimeService) Show(animeID string) (*AnimeShowResponse, *http.Response, error) {
-	urlStr := fmt.Sprintf(defaultAPIVersion+"anime/%s", animeID)
+	u := fmt.Sprintf(defaultAPIVersion+"anime/%s", animeID)
+
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	a := new(AnimeShowResponse)
+	resp, err := s.client.Do(req, a)
+	if err != nil {
+		return nil, resp, err
+	}
+	return a, resp, nil
+}
+
 
 	req, err := s.client.NewRequest("GET", urlStr, nil)
 	if err != nil {
