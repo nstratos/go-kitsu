@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -28,6 +30,10 @@ type Client struct {
 	Anime *AnimeService
 }
 
+type service struct {
+	client *Client
+}
+
 // Resource represent a JSON API resource object. It contains common fields
 // used by the Kitsu API resources like Anime and Manga.
 //
@@ -46,6 +52,66 @@ type Link struct {
 	Self string `json:"self"`
 }
 
+// Options specifies the optional parameters to various List methods that
+// support them.
+//
+// Pagination
+//
+// PageLimit and PageOffset provide pagination support. If PageLimit is not
+// specified they are both ignored.
+//
+// Filtering
+//
+// If Filter is specified (e.g. genres) then one or more filter values can be
+// passed in FilterVal (e.g. sports, sci-fi etc).
+//
+// Sorting
+//
+// Sort can be specified to provide sorting for one or more attributes (e.g.
+// averageRating for Anime). By default, sorts are applied in ascending order.
+// For descending order you can prepend a - to the sort parameter (e.g.
+// -averageRating for Anime).
+//
+// Includes
+//
+// You can include one or more related resources by specifying the
+// relationships in Include. You can also specify successive relationships
+// using a . (e.g. media.genres for library entries).
+type Options struct {
+	PageLimit  int
+	PageOffset int
+	Filter     string
+	FilterVal  []string
+	Sort       []string
+	Include    []string
+}
+
+func addOptions(s string, opt *Options) (string, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return s, err
+	}
+
+	v := u.Query()
+	if opt.PageLimit != 0 {
+		v.Set("page[limit]", strconv.Itoa(opt.PageLimit))
+		v.Set("page[offset]", strconv.Itoa(opt.PageOffset))
+	}
+	if opt.Filter != "" && opt.FilterVal != nil {
+		v.Set(fmt.Sprintf("filter[%s]", opt.Filter),
+			strings.Join(opt.FilterVal, ","))
+	}
+	if opt.Sort != nil {
+		v.Set("sort", strings.Join(opt.Sort, ","))
+	}
+	if opt.Sort != nil {
+		v.Set("include", strings.Join(opt.Include, ","))
+	}
+
+	u.RawQuery = v.Encode()
+	return u.String(), nil
+}
+
 // NewClient returns a new kitsu.io API client.
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
@@ -60,10 +126,6 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Anime = (*AnimeService)(&c.common)
 
 	return c
-}
-
-type service struct {
-	client *Client
 }
 
 // NewRequest creates an API request. If a relative URL is provided in urlStr,

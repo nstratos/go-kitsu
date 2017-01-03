@@ -63,10 +63,27 @@ func TestAnimeService_List(t *testing.T) {
 
 	mux.HandleFunc("/"+defaultAPIVersion+"anime", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+		testFormValues(t, r, values{
+			"page[limit]":    "2",
+			"page[offset]":   "0",
+			"filter[genres]": "sports,sci-fi",
+			"sort":           "-followersCount,-followingCount",
+			"include":        "media.genres,media.installments",
+		})
+
 		fmt.Fprintf(w, `{"data":[{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}},{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}]}`)
 	})
 
-	got, _, err := client.Anime.List()
+	opt := &Options{
+		PageLimit:  2,
+		PageOffset: 0,
+		Filter:     "genres",
+		FilterVal:  []string{"sports", "sci-fi"},
+		Sort:       []string{"-followersCount", "-followingCount"},
+		Include:    []string{"media.genres", "media.installments"},
+	}
+
+	got, _, err := client.Anime.List(opt)
 	if err != nil {
 		t.Errorf("Anime.List returned error: %v", err)
 	}

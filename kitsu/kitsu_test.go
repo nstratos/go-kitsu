@@ -44,6 +44,22 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 	}
 }
 
+type values map[string]string
+
+func testFormValues(t *testing.T, r *http.Request, values values) {
+	want := url.Values{}
+	for k, v := range values {
+		want.Add(k, v)
+	}
+
+	if err := r.ParseForm(); err != nil {
+		t.Error("ParseForm returned error:", err)
+	}
+	if got := r.Form; !reflect.DeepEqual(got, want) {
+		t.Errorf("Request parameters: \n%v, want \n%v", got, want)
+	}
+}
+
 func TestNewClient(t *testing.T) {
 	c := NewClient(nil)
 

@@ -53,8 +53,15 @@ type AnimeListResponse struct {
 	Data []*Anime `json:"data"`
 }
 
-func (s *AnimeService) List() (*AnimeListResponse, *http.Response, error) {
+// List returns a list of Anime. Optional parameters can be specified to filter
+// the search results and control pagination, sorting etc.
+func (s *AnimeService) List(opt *Options) (*AnimeListResponse, *http.Response, error) {
 	u := defaultAPIVersion + "anime"
+
+	u, err := addOptions(u, opt)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
