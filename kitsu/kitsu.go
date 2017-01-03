@@ -157,6 +157,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	if body != nil {
 		req.Header.Set("Content-type", defaultMediaType)
 	}
+	req.Header.Set("Accept", defaultMediaType)
 
 	return req, nil
 }

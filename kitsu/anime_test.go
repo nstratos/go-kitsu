@@ -14,6 +14,7 @@ func TestAnimeService_Show(t *testing.T) {
 
 	mux.HandleFunc("/"+defaultAPIVersion+"anime/7442", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+		testHeader(t, r, "Accept", defaultMediaType)
 		fmt.Fprintf(w, `{"data":{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}}`)
 	})
 
@@ -34,6 +35,7 @@ func TestAnimeService_Show_notFound(t *testing.T) {
 
 	mux.HandleFunc("/"+defaultAPIVersion+"anime/0", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+		testHeader(t, r, "Accept", defaultMediaType)
 		http.Error(w, `{"errors":[{"title":"Record not found","detail":"The record identified by 0 could not be found.","code":"404","status":"404"}]}`, http.StatusNotFound)
 	})
 
@@ -63,6 +65,7 @@ func TestAnimeService_List(t *testing.T) {
 
 	mux.HandleFunc("/"+defaultAPIVersion+"anime", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
+		testHeader(t, r, "Accept", defaultMediaType)
 		testFormValues(t, r, values{
 			"page[limit]":    "2",
 			"page[offset]":   "0",
