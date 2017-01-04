@@ -15,7 +15,7 @@ type AnimeService service
 // AnimeShowResponse is the response returned by AnimeService.Show which
 // contains one Anime.
 type AnimeShowResponse struct {
-	Data *Anime `json:"data"`
+	Data *Anime `json:"data,omitempty"`
 }
 
 // Anime represents a Kitsu Anime.
