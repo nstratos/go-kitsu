@@ -40,7 +40,7 @@ type service struct {
 // JSON API docs: http://jsonapi.org/format/#document-resource-objects
 type Resource struct {
 	ID    string `json:"id"`
-	Type  string `json:"type"`
+	Type  string `json:"type,omitempty"`
 	Links Link   `json:"links,omitempty"`
 }
 
