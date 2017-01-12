@@ -23,7 +23,7 @@ func TestAnimeService_Show(t *testing.T) {
 		t.Errorf("Anime.Show returned error: %v", err)
 	}
 
-	want := &AnimeShowResponse{Data: &Anime{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: AnimeAttributes{Slug: "attack-on-titan"}}}
+	want := &AnimeShowResponse{Data: &Anime{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Anime.Show anime is \n%+v, want \n%+v", got, want)
 	}
@@ -93,8 +93,8 @@ func TestAnimeService_List(t *testing.T) {
 
 	want := &AnimeListResponse{
 		Data: []*Anime{
-			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: AnimeAttributes{Slug: "attack-on-titan"}},
-			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: AnimeAttributes{Slug: "attack-on-titan"}},
+			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}},
+			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}},
 		},
 	}
 	if !reflect.DeepEqual(got, want) {

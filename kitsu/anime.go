@@ -21,7 +21,7 @@ type AnimeShowResponse struct {
 // Anime represents a Kitsu Anime.
 type Anime struct {
 	Resource
-	Attributes AnimeAttributes `json:"attributes"`
+	Attributes *AnimeAttributes `json:"attributes,omitempty"`
 }
 
 // AnimeAttributes represent the attributes of an Anime object.
