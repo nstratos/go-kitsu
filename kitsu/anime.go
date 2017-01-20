@@ -3,6 +3,26 @@ package kitsu
 import (
 	"fmt"
 	"net/http"
+
+type AnimeType string
+
+const (
+	AnimeTypeTV      AnimeType = "TV"
+	AnimeTypeSpecial AnimeType = "special"
+	AnimeTypeOVA     AnimeType = "OVA"
+	AnimeTypeONA     AnimeType = "ONA"
+	AnimeTypeMovie   AnimeType = "movie"
+	AnimeTypeMusic   AnimeType = "music"
+)
+
+type MangaType string
+
+const (
+	MangaTypeDrama   MangaType = "drama"
+	MangaTypeNovel   MangaType = "novel"
+	MangaTypeManhua  MangaType = "manhua"
+	MangaTypeOneshot MangaType = "oneshot"
+	MangaTypeDoujin  MangaType = "doujin"
 )
 
 // AnimeService handles communication with the anime related methods of the
