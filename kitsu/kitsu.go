@@ -162,6 +162,22 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	return req, nil
 }
 
+// Response is a Kitsu API response. It wraps the standard http.Response
+// returned from the request and provides access to pagination offsets for
+// responses that return an array of results.
+type Response struct {
+	*http.Response
+
+	NextOffset  int
+	PrevOffset  int
+	FirstOffset int
+	LastOffset  int
+}
+
+func newResponse(r *http.Response) *Response {
+	return &Response{Response: r}
+}
+
 // Do sends an API request and returns the API response. If an API error has
 // occurred both the response and the error will be returned in case the caller
 // wishes to further inspect the response. If v is passed as an argument, then

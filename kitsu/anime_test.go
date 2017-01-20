@@ -1,6 +1,7 @@
 package kitsu
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,9 +24,9 @@ func TestAnimeService_Show(t *testing.T) {
 		t.Errorf("Anime.Show returned error: %v", err)
 	}
 
-	want := &AnimeShowResponse{Data: &Anime{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}}}
+	want := &Anime{ID: "7442", Slug: "attack-on-titan"}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Anime.Show anime is \n%+v, want \n%+v", got, want)
+		t.Errorf("Anime.Show anime mismatch\nhave: %#+v\nwant: %#+v", got, want)
 	}
 }
 
@@ -74,7 +75,28 @@ func TestAnimeService_List(t *testing.T) {
 			"include":        "media.genres,media.installments",
 		})
 
-		fmt.Fprintf(w, `{"data":[{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}},{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}]}`)
+		const s = `
+		{
+			"data": [{
+				"id": "7442",
+				"type": "anime",
+				"attributes": {
+					"slug": "attack-on-titan"
+				}
+			}, {
+				"id": "7442",
+				"type": "anime",
+				"attributes": {
+					"slug": "attack-on-titan"
+				}
+			}],
+			"links": {
+				"first": "https://kitsu.io/api/17/anime?page%5Blimit%5D=50&page%5Boffset%5D=0",
+				"next": "https://kitsu.io/api/17/anime?page%5Blimit%5D=50&page%5Boffset%5D=50",
+				"last": "https://kitsu.io/api/17/anime?page%5Blimit%5D=50&page%5Boffset%5D=498"
+			}
+		}`
+		fmt.Fprint(w, s)
 	})
 
 	opt := &Options{
@@ -86,18 +108,32 @@ func TestAnimeService_List(t *testing.T) {
 		Include:    []string{"media.genres", "media.installments"},
 	}
 
-	got, _, err := client.Anime.List(opt)
+	got, resp, err := client.Anime.List(opt)
 	if err != nil {
 		t.Errorf("Anime.List returned error: %v", err)
 	}
 
-	want := &AnimeListResponse{
-		Data: []*Anime{
-			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}},
-			{Resource: Resource{ID: "7442", Type: "anime"}, Attributes: &AnimeAttributes{Slug: "attack-on-titan"}},
-		},
+	want := []*Anime{
+		{ID: "7442", Slug: "attack-on-titan"},
+		{ID: "7442", Slug: "attack-on-titan"},
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Anime.List returns \n%+v, want \n%+v", got, want)
+		t.Errorf("Anime.List mismatch\nhave: %#+v\nwant: %#+v", got, want)
+		data, _ := json.Marshal(got)
+		fmt.Println(string(data))
+		data, _ = json.Marshal(want)
+		fmt.Println(string(data))
+	}
+	if got, want := resp.FirstOffset, 0; got != want {
+		t.Errorf("Anime.List response FirstOffset = %d, want %d", got, want)
+	}
+	if got, want := resp.LastOffset, 498; got != want {
+		t.Errorf("Anime.List response LastOffset = %d, want %d", got, want)
+	}
+	if got, want := resp.NextOffset, 50; got != want {
+		t.Errorf("Anime.List response NextOffset = %d, want %d", got, want)
+	}
+	if got, want := resp.PrevOffset, 0; got != want {
+		t.Errorf("Anime.List response PrevOffset = %d, want %d", got, want)
 	}
 }
