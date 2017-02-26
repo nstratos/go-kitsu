@@ -8,8 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/google/jsonapi"
 )
 
 const (
@@ -104,7 +107,7 @@ func addOptions(s string, opt *Options) (string, error) {
 	if opt.Sort != nil {
 		v.Set("sort", strings.Join(opt.Sort, ","))
 	}
-	if opt.Sort != nil {
+	if opt.Include != nil {
 		v.Set("include", strings.Join(opt.Include, ","))
 	}
 
@@ -182,7 +185,7 @@ func newResponse(r *http.Response) *Response {
 // occurred both the response and the error will be returned in case the caller
 // wishes to further inspect the response. If v is passed as an argument, then
 // the API response is JSON decoded and stored to v.
-func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
+func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -192,13 +195,47 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 
 	err = checkResponse(resp)
 	if err != nil {
-		return resp, err
+		return newResponse(resp), err
 	}
 
 	if v != nil {
-		err = json.NewDecoder(resp.Body).Decode(v)
+		err = jsonapi.UnmarshalPayload(resp.Body, v)
 	}
-	return resp, err
+	return newResponse(resp), err
+}
+
+func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Response, error) {
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer resp.Body.Close()
+
+	err = checkResponse(resp)
+	if err != nil {
+		return nil, newResponse(resp), err
+	}
+
+	var v []interface{}
+	var links map[string]string
+	v, links, err = jsonapi.UnmarshalManyPayloadWithLinks(resp.Body, t)
+	if err != nil {
+		return nil, newResponse(resp), err
+	}
+
+	o, err := parseOffset(links)
+	if err != nil {
+		return nil, newResponse(resp), err
+	}
+	response := &Response{
+		Response:    resp,
+		FirstOffset: o.first,
+		LastOffset:  o.last,
+		PrevOffset:  o.prev,
+		NextOffset:  o.next,
+	}
+	return v, response, err
 }
 
 // ErrorResponse reports one or more errors caused by an API request.

@@ -143,23 +143,23 @@ func TestClient_Do(t *testing.T) {
 	defer teardown()
 
 	type foo struct {
-		Bar string `json:"bar"`
+		Bar string `jsonapi:"primary,foo"`
 	}
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if m := "GET"; m != r.Method {
 			t.Errorf("Request method = %v, want %v", r.Method, m)
 		}
-		fmt.Fprint(w, `{"bar":"foo"}`)
+		fmt.Fprint(w, `{"data":{"id":"foobar","type":"foo"}}`)
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	body := new(foo)
-	_, _ = client.Do(req, body)
+	got := new(foo)
+	_, _ = client.Do(req, got)
 
-	want := &foo{Bar: "foo"}
-	if !reflect.DeepEqual(body, want) {
-		t.Errorf("Response body = %v, want %v", body, want)
+	want := &foo{Bar: "foobar"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Response body = %v, want %v", got, want)
 	}
 }
 
@@ -178,7 +178,7 @@ func TestClient_Do_httpError(t *testing.T) {
 	}
 }
 
-func TestDo_redirectLoop(t *testing.T) {
+func TestClient_Do_redirectLoop(t *testing.T) {
 	setup()
 	defer teardown()
 
