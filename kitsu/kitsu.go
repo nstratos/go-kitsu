@@ -28,6 +28,7 @@ type Client struct {
 	common service
 
 	Anime *AnimeService
+	User  *UserService
 }
 
 type service struct {
@@ -124,6 +125,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.common.client = c
 
 	c.Anime = (*AnimeService)(&c.common)
+	c.User = (*UserService)(&c.common)
 
 	return c
 }
