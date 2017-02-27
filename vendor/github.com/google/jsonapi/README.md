@@ -1,11 +1,9 @@
 # jsonapi
 
-[![Build Status](https://travis-ci.org/google/jsonapi.svg?branch=master)](https://travis-ci.org/google/jsonapi)
+[![Build Status](https://travis-ci.org/google/jsonapi.svg?branch=master)](https://travis-ci.org/google/jsonapi) [![GoDoc](https://godoc.org/github.com/google/jsonapi?status.svg)](http://godoc.org/github.com/google/jsonapi)
 
-A serailizer/deserializer for json payloads that comply to the
+A serializer/deserializer for JSON payloads that comply to the
 [JSON API - jsonapi.org](http://jsonapi.org) spec in go.
-
-Also visit, [Godoc](http://godoc.org/github.com/google/jsonapi).
 
 ## Installation
 
@@ -87,12 +85,11 @@ To run,
 
 * Make sure you have go installed
 * Create the following directories or similar: `~/go`
-* `cd` there
 * Set `GOPATH` to `PWD` in your shell session, `export GOPATH=$PWD`
 * `go get github.com/google/jsonapi`.  (Append `-u` after `get` if you
   are updating.)
-* `go run src/github.com/google/jsonapi/examples/app.go` or `cd
-  src/github.com/google/jsonapi/examples && go run app.go`
+* `go run $GOPATH/src/github.com/google/jsonapi/examples/app.go` or `cd
+  $GOPATH/src/github.com/google/jsonapi/examples && go run app.go`
 
 ## `jsonapi` Tag Reference
 
@@ -166,14 +163,16 @@ field when `count` has a value of `0`). Lastly, the spec indicates that
 #### `relation`
 
 ```
-`jsonapi:"relation,<key name in relationships hash>"`
+`jsonapi:"relation,<key name in relationships hash>,<optional: omitempty>"`
 ```
 
 Relations are struct fields that represent a one-to-one or one-to-many
 relationship with other structs. JSON API will traverse the graph of
 relationships and marshal or unmarshal records.  The first argument must
 be, `relation`, and the second should be the name of the relationship,
-used as the key in the `relationships` hash for the record.
+used as the key in the `relationships` hash for the record. The optional
+third argument is `omitempty` - if present will prevent non existent to-one and
+to-many from being serialized.
 
 ## Methods Reference
 
@@ -220,24 +219,24 @@ Writes a JSON API response, with related records sideloaded, into an
 only. If you want to serialize many records, see,
 [MarshalManyPayload](#marshalmanypayload).
 
-#### Handler Example Code
+##### Handler Example Code
 
 ```go
 func CreateBlog(w http.ResponseWriter, r *http.Request) {
 	blog := new(Blog)
 
 	if err := jsonapi.UnmarshalPayload(r.Body, blog); err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// ...save your blog...
 
-	w.WriteHeader(201)
-	w.Header().Set("Content-Type", "application/vnd.api+json")
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", jsonapi.MediaType)
 
 	if err := jsonapi.MarshalOnePayload(w, blog); err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 ```
@@ -268,7 +267,6 @@ blogInterface := make([]interface{}, len(blogs))
 for i, blog := range blogs {
   blogInterface[i] = blog
 }
-
 ```
 
 Alternatively, you can insert your `Blog`s into a slice of `interface{}`
@@ -281,7 +279,7 @@ this,
 func FetchBlogs() ([]interface{}, error)
 ```
 
-#### Handler Example Code
+##### Handler Example Code
 
 ```go
 func ListBlogs(w http.ResponseWriter, r *http.Request) {
@@ -290,11 +288,159 @@ func ListBlogs(w http.ResponseWriter, r *http.Request) {
   // but, for now
 	blogs := testBlogsForList()
 
-	w.WriteHeader(200)
-	w.Header().Set("Content-Type", "application/vnd.api+json")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", jsonapi.MediaType)
 	if err := jsonapi.MarshalManyPayload(w, blogs); err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+```
+
+### Create Records Example
+
+#### `UnmarshalManyPayload`
+
+```go
+UnmarshalManyPayload(in io.Reader, t reflect.Type) ([]interface{}, error)
+```
+
+Visit [godoc](http://godoc.org/github.com/google/jsonapi#UnmarshalManyPayload)
+
+Takes an `io.Reader` and a `reflect.Type` representing the uniform type
+contained within the `"data"` JSON API member.
+
+##### Handler Example Code
+
+```go
+func CreateBlogs(w http.ResponseWriter, r *http.Request) {
+	// ...create many blogs at once
+
+	blogs, err := UnmarshalManyPayload(r.Body, reflect.TypeOf(new(Blog)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, blog := range blogs {
+		b, ok := blog.(*Blog)
+		// ...save each of your blogs
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", jsonapi.MediaType)
+	if err := jsonapi.MarshalManyPayload(w, blogs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+```
+
+
+### Links
+
+If you need to include [link objects](http://jsonapi.org/format/#document-links) along with response data, implement the `Linkable` interface for document-links, and `RelationshipLinkable` for relationship links:
+
+```go
+func (post Post) JSONAPILinks() *Links {
+	return &Links{
+		"self": "href": fmt.Sprintf("https://example.com/posts/%d", post.ID),
+		"comments": Link{
+			Href: fmt.Sprintf("https://example.com/api/blogs/%d/comments", post.ID),
+			Meta: map[string]interface{}{
+				"counts": map[string]uint{
+					"likes":    4,
+				},
+			},
+		},
+	}
+}
+
+// Invoked for each relationship defined on the Post struct when marshaled
+func (post Post) JSONAPIRelationshipLinks(relation string) *Links {
+	if relation == "comments" {
+		return &Links{
+			"related": fmt.Sprintf("https://example.com/posts/%d/comments", post.ID),
+		}
+	}
+	return nil
+}
+```
+
+### Meta
+
+ If you need to include [meta objects](http://jsonapi.org/format/#document-meta) along with response data, implement the `Metable` interface for document-meta, and `RelationshipMetable` for relationship meta:
+
+ ```go
+func (post Post) JSONAPIMeta() *Meta {
+	return &Meta{
+		"details": "sample details here",
+	}
+}
+
+// Invoked for each relationship defined on the Post struct when marshaled
+func (post Post) JSONAPIRelationshipMeta(relation string) *Meta {
+	if relation == "comments" {
+		return &Meta{
+			"this": map[string]interface{}{
+				"can": map[string]interface{}{
+					"go": []interface{}{
+						"as",
+						"deep",
+						map[string]interface{}{
+							"as": "required",
+						},
+					},
+				},
+			},
+		}
+	}
+	return nil
+}
+```
+
+### Errors
+This package also implements support for JSON API compatible `errors` payloads using the following types.
+
+#### `MarshalErrors`
+```go
+MarshalErrors(w io.Writer, errs []*ErrorObject) error
+```
+
+Writes a JSON API response using the given `[]error`.
+
+#### `ErrorsPayload`
+```go
+type ErrorsPayload struct {
+	Errors []*ErrorObject `json:"errors"`
+}
+```
+
+ErrorsPayload is a serializer struct for representing a valid JSON API errors payload.
+
+#### `ErrorObject`
+```go
+type ErrorObject struct { ... }
+
+// Error implements the `Error` interface.
+func (e *ErrorObject) Error() string {
+	return fmt.Sprintf("Error: %s %s\n", e.Title, e.Detail)
+}
+```
+
+ErrorObject is an `Error` implementation as well as an implementation of the JSON API error object.
+
+The main idea behind this struct is that you can use it directly in your code as an error type and pass it directly to `MarshalErrors` to get a valid JSON API errors payload.
+
+##### Errors Example Code
+```go
+// An error has come up in your code, so set an appropriate status, and serialize the error.
+if err := validate(&myStructToValidate); err != nil {
+	context.SetStatusCode(http.StatusBadRequest) // Or however you need to set a status.
+	jsonapi.MarshalErrors(w, []*ErrorObject{{
+		Title: "Validation Error",
+		Detail: "Given request body was invalid.",
+		Status: "400",
+		Meta: map[string]interface{}{"field": "some_field", "error": "bad type", "expected": "string", "received": "float64"},
+	}})
+	return
 }
 ```
 
@@ -331,7 +477,7 @@ jsonapi.MarshalOnePayloadEmbedded(out, testModel())
 h := new(BlogsHandler)
 
 w := httptest.NewRecorder()
-r, _ := http.NewRequest("POST", "/blogs", out)
+r, _ := http.NewRequest(http.MethodPost, "/blogs", out)
 
 h.CreateBlog(w, r)
 

@@ -1,10 +1,10 @@
 {
-    "memo": "",
+    "memo": "24a389efb388bdedbdcde7a090a8be9f42ee1c23ec3f788b87046756d5b91fd6",
     "projects": [
         {
             "name": "github.com/google/jsonapi",
             "branch": "master",
-            "revision": "bb88592460dad6d6a06685070c2c7edaa017aabd",
+            "revision": "bce762968295cf96afcbbf082a2e15ca7e664c91",
             "packages": [
                 "."
             ]

@@ -30,6 +30,8 @@ var (
 	// ErrUnsupportedPtrType is returned when the Struct field was a pointer but
 	// the JSON value was of a different type
 	ErrUnsupportedPtrType = errors.New("Pointer type in struct is not supported")
+	// ErrInvalidType is returned when the given type is incompatible with the expected type.
+	ErrInvalidType = errors.New("Invalid type provided") // I wish we used punctuation.
 )
 
 // UnmarshalPayload converts an io into a struct instance using jsonapi tags on
@@ -54,7 +56,7 @@ var (
 //   	// ...do stuff with your blog...
 //
 //   	w.WriteHeader(201)
-//   	w.Header().Set("Content-Type", "application/vnd.api+json")
+//   	w.Header().Set("Content-Type", jsonapi.MediaType)
 //
 //   	if err := jsonapi.MarshalOnePayload(w, blog); err != nil {
 //   		http.Error(w, err.Error(), 500)
@@ -84,6 +86,8 @@ func UnmarshalPayload(in io.Reader, model interface{}) error {
 	return unmarshalNode(payload.Data, reflect.ValueOf(model), nil)
 }
 
+// UnmarshalManyPayload converts an io into a set of struct instances using
+// jsonapi tags on the type's struct fields.
 func UnmarshalManyPayload(in io.Reader, t reflect.Type) ([]interface{}, error) {
 	payload := new(ManyPayload)
 
@@ -91,31 +95,19 @@ func UnmarshalManyPayload(in io.Reader, t reflect.Type) ([]interface{}, error) {
 		return nil, err
 	}
 
+	models := []interface{}{}         // will be populated from the "data"
+	includedMap := map[string]*Node{} // will be populate from the "included"
+
 	if payload.Included != nil {
-		includedMap := make(map[string]*Node)
 		for _, included := range payload.Included {
 			key := fmt.Sprintf("%s,%s", included.Type, included.ID)
 			includedMap[key] = included
 		}
-
-		var models []interface{}
-		for _, data := range payload.Data {
-			model := reflect.New(t.Elem())
-			err := unmarshalNode(data, model, &includedMap)
-			if err != nil {
-				return nil, err
-			}
-			models = append(models, model.Interface())
-		}
-
-		return models, nil
 	}
-
-	var models []interface{}
 
 	for _, data := range payload.Data {
 		model := reflect.New(t.Elem())
-		err := unmarshalNode(data, model, nil)
+		err := unmarshalNode(data, model, &includedMap)
 		if err != nil {
 			return nil, err
 		}
@@ -155,13 +147,13 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 
 		annotation := args[0]
 
-		if (annotation == clientIDAnnotation && len(args) != 1) ||
-			(annotation != clientIDAnnotation && len(args) < 2) {
+		if (annotation == annotationClientID && len(args) != 1) ||
+			(annotation != annotationClientID && len(args) < 2) {
 			er = ErrBadJSONAPIStructTag
 			break
 		}
 
-		if annotation == "primary" {
+		if annotation == annotationPrimary {
 			if data.ID == "" {
 				continue
 			}
@@ -244,13 +236,13 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 			}
 
 			assign(fieldValue, idValue)
-		} else if annotation == clientIDAnnotation {
+		} else if annotation == annotationClientID {
 			if data.ClientID == "" {
 				continue
 			}
 
 			fieldValue.Set(reflect.ValueOf(data.ClientID))
-		} else if annotation == "attr" {
+		} else if annotation == annotationAttribute {
 			attributes := data.Attributes
 			if attributes == nil || len(data.Attributes) == 0 {
 				continue
@@ -260,7 +252,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 
 			if len(args) > 2 {
 				for _, arg := range args[2:] {
-					if arg == "iso8601" {
+					if arg == annotationISO8601 {
 						iso8601 = true
 					}
 				}
@@ -304,8 +296,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				} else if v.Kind() == reflect.Int {
 					at = v.Int()
 				} else {
-					er = ErrInvalidTime
-					break
+					return ErrInvalidTime
 				}
 
 				t := time.Unix(at, 0)
@@ -315,7 +306,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				continue
 			}
 
-			if fieldValue.Type() == reflect.TypeOf([]string(nil)) {
+			if fieldValue.Type() == reflect.TypeOf([]string{}) {
 				values := make([]string, v.Len())
 				for i := 0; i < v.Len(); i++ {
 					values[i] = v.Index(i).Interface().(string)
@@ -356,8 +347,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				} else if v.Kind() == reflect.Int {
 					at = v.Int()
 				} else {
-					er = ErrInvalidTime
-					break
+					return ErrInvalidTime
 				}
 
 				v := time.Unix(at, 0)
@@ -418,13 +408,10 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 					n := float32(floatValue)
 					numericValue = reflect.ValueOf(&n)
 				case reflect.Float64:
-					n := float64(floatValue)
+					n := floatValue
 					numericValue = reflect.ValueOf(&n)
 				default:
-					// We had a JSON float (numeric), but our field was a non numeric
-					// type
-					er = ErrUnknownFieldNumberType
-					break
+					return ErrUnknownFieldNumberType
 				}
 
 				assign(fieldValue, numericValue)
@@ -447,24 +434,24 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				case uintptr:
 					concreteVal = reflect.ValueOf(&cVal)
 				default:
-					er = ErrUnsupportedPtrType
-					break
+					return ErrUnsupportedPtrType
 				}
 
 				if fieldValue.Type() != concreteVal.Type() {
-					// TODO: use fmt.Errorf so that you can have a more informative
-					// message that reports the attempted type that was not supported.
-					er = ErrUnsupportedPtrType
-					break
+					return ErrUnsupportedPtrType
 				}
 
 				fieldValue.Set(concreteVal)
 				continue
 			}
 
+			// As a final catch-all, ensure types line up to avoid a runtime panic.
+			if fieldValue.Kind() != v.Kind() {
+				return ErrInvalidType
+			}
 			fieldValue.Set(reflect.ValueOf(val))
 
-		} else if annotation == "relation" {
+		} else if annotation == annotationRelation {
 			isSlice := fieldValue.Type().Kind() == reflect.Slice
 
 			if data.Relationships == nil || data.Relationships[args[1]] == nil {
@@ -472,6 +459,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 			}
 
 			if isSlice {
+				// to-many relationship
 				relationship := new(RelationshipManyNode)
 
 				buf := bytes.NewBuffer(nil)
@@ -499,6 +487,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 
 				fieldValue.Set(models)
 			} else {
+				// to-one relationships
 				relationship := new(RelationshipOneNode)
 
 				buf := bytes.NewBuffer(nil)
@@ -508,8 +497,17 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				)
 				json.NewDecoder(buf).Decode(relationship)
 
-				m := reflect.New(fieldValue.Type().Elem())
+				/*
+					http://jsonapi.org/format/#document-resource-object-relationships
+					http://jsonapi.org/format/#document-resource-object-linkage
+					relationship can have a data node set to null (e.g. to disassociate the relationship)
+					so unmarshal and set fieldValue only if data obj is not null
+				*/
+				if relationship.Data == nil {
+					continue
+				}
 
+				m := reflect.New(fieldValue.Type().Elem())
 				if err := unmarshalNode(
 					fullNode(relationship.Data, included),
 					m,
@@ -520,6 +518,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 				}
 
 				fieldValue.Set(m)
+
 			}
 
 		} else {
@@ -527,11 +526,7 @@ func unmarshalNode(data *Node, model reflect.Value, included *map[string]*Node) 
 		}
 	}
 
-	if er != nil {
-		return er
-	}
-
-	return nil
+	return er
 }
 
 func fullNode(n *Node, included *map[string]*Node) *Node {

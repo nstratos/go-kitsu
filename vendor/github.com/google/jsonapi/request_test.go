@@ -3,22 +3,46 @@ package jsonapi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 )
 
-type BadModel struct {
-	ID int `jsonapi:"primary"`
-}
+func TestUnmarshall_attrStringSlice(t *testing.T) {
+	out := &Book{}
+	tags := []string{"fiction", "sale"}
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type":       "books",
+			"id":         "1",
+			"attributes": map[string]interface{}{"tags": tags},
+		},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-type WithPointer struct {
-	ID       *uint64  `jsonapi:"primary,with-pointers"`
-	Name     *string  `jsonapi:"attr,name"`
-	IsActive *bool    `jsonapi:"attr,is-active"`
-	IntVal   *int     `jsonapi:"attr,int-val"`
-	FloatVal *float32 `jsonapi:"attr,float-val"`
+	if err := UnmarshalPayload(bytes.NewReader(b), out); err != nil {
+		t.Fatal(err)
+	}
+
+	if e, a := len(tags), len(out.Tags); e != a {
+		t.Fatalf("Was expecting %d tags, got %d", e, a)
+	}
+
+	sort.Strings(tags)
+	sort.Strings(out.Tags)
+
+	for i, tag := range tags {
+		if e, a := tag, out.Tags[i]; e != a {
+			t.Fatalf("At index %d, was expecting %s got %s", i, e, a)
+		}
+	}
 }
 
 func TestUnmarshalToStructWithPointerAttr(t *testing.T) {
@@ -35,7 +59,7 @@ func TestUnmarshalToStructWithPointerAttr(t *testing.T) {
 	if *out.Name != "The name" {
 		t.Fatalf("Error unmarshalling to string ptr")
 	}
-	if *out.IsActive != true {
+	if !*out.IsActive {
 		t.Fatalf("Error unmarshalling to bool ptr")
 	}
 	if *out.IntVal != 8 {
@@ -97,6 +121,23 @@ func TestUnmarshalPayloadWithPointerAttr_AbsentVal(t *testing.T) {
 	}
 }
 
+func TestUnmarshalToStructWithPointerAttr_BadType(t *testing.T) {
+	out := new(WithPointer)
+	in := map[string]interface{}{
+		"name": true, // This is the wrong type.
+	}
+	expectedErrorMessage := ErrUnsupportedPtrType.Error()
+
+	err := UnmarshalPayload(sampleWithPointerPayload(in), out)
+
+	if err == nil {
+		t.Fatalf("Expected error due to invalid type.")
+	}
+	if err.Error() != expectedErrorMessage {
+		t.Fatalf("Unexpected error message: %s", err.Error())
+	}
+}
+
 func TestStringPointerField(t *testing.T) {
 	// Build Book payload
 	description := "Hello World!"
@@ -146,6 +187,36 @@ func TestUnmarshalInvalidJSON(t *testing.T) {
 
 	if err == nil {
 		t.Fatalf("Did not error out the invalid JSON.")
+	}
+}
+
+func TestUnmarshalInvalidJSON_BadType(t *testing.T) {
+	var badTypeTests = []struct {
+		Field    string
+		BadValue interface{}
+		Error    error
+	}{ // The `Field` values here correspond to the `ModelBadTypes` jsonapi fields.
+		{Field: "string_field", BadValue: 0, Error: ErrUnknownFieldNumberType},  // Expected string.
+		{Field: "float_field", BadValue: "A string.", Error: ErrInvalidType},    // Expected float64.
+		{Field: "time_field", BadValue: "A string.", Error: ErrInvalidTime},     // Expected int64.
+		{Field: "time_ptr_field", BadValue: "A string.", Error: ErrInvalidTime}, // Expected *time / int64.
+	}
+	for _, test := range badTypeTests {
+		t.Run(fmt.Sprintf("Test_%s", test.Field), func(t *testing.T) {
+			out := new(ModelBadTypes)
+			in := map[string]interface{}{}
+			in[test.Field] = test.BadValue
+			expectedErrorMessage := test.Error.Error()
+
+			err := UnmarshalPayload(samplePayloadWithBadTypes(in), out)
+
+			if err == nil {
+				t.Fatalf("Expected error due to invalid type.")
+			}
+			if err.Error() != expectedErrorMessage {
+				t.Fatalf("Unexpected error message: %s", err.Error())
+			}
+		})
 	}
 }
 
@@ -301,6 +372,72 @@ func TestUnmarshalRelationships(t *testing.T) {
 	}
 }
 
+func TestUnmarshalNullRelationship(t *testing.T) {
+	sample := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "posts",
+			"id":   "1",
+			"attributes": map[string]interface{}{
+				"body":  "Hello",
+				"title": "World",
+			},
+			"relationships": map[string]interface{}{
+				"latest_comment": map[string]interface{}{
+					"data": nil, // empty to-one relationship
+				},
+			},
+		},
+	}
+	data, err := json.Marshal(sample)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	in := bytes.NewReader(data)
+	out := new(Post)
+
+	if err := UnmarshalPayload(in, out); err != nil {
+		t.Fatal(err)
+	}
+
+	if out.LatestComment != nil {
+		t.Fatalf("Latest Comment was not set to nil")
+	}
+}
+
+func TestUnmarshalNullRelationshipInSlice(t *testing.T) {
+	sample := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "posts",
+			"id":   "1",
+			"attributes": map[string]interface{}{
+				"body":  "Hello",
+				"title": "World",
+			},
+			"relationships": map[string]interface{}{
+				"comments": map[string]interface{}{
+					"data": []interface{}{}, // empty to-many relationships
+				},
+			},
+		},
+	}
+	data, err := json.Marshal(sample)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	in := bytes.NewReader(data)
+	out := new(Post)
+
+	if err := UnmarshalPayload(in, out); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(out.Comments) != 0 {
+		t.Fatalf("Wrong number of comments; Comments should be empty")
+	}
+}
+
 func TestUnmarshalNestedRelationships(t *testing.T) {
 	out, err := unmarshalSamplePayload()
 	if err != nil {
@@ -438,6 +575,134 @@ func unmarshalSamplePayload() (*Blog, error) {
 	return out, nil
 }
 
+func TestUnmarshalManyPayload(t *testing.T) {
+	sample := map[string]interface{}{
+		"data": []interface{}{
+			map[string]interface{}{
+				"type": "posts",
+				"id":   "1",
+				"attributes": map[string]interface{}{
+					"body":  "First",
+					"title": "Post",
+				},
+			},
+			map[string]interface{}{
+				"type": "posts",
+				"id":   "2",
+				"attributes": map[string]interface{}{
+					"body":  "Second",
+					"title": "Post",
+				},
+			},
+		},
+	}
+
+	data, err := json.Marshal(sample)
+	if err != nil {
+		t.Fatal(err)
+	}
+	in := bytes.NewReader(data)
+
+	posts, err := UnmarshalManyPayload(in, reflect.TypeOf(new(Post)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(posts) != 2 {
+		t.Fatal("Wrong number of posts")
+	}
+
+	for _, p := range posts {
+		_, ok := p.(*Post)
+		if !ok {
+			t.Fatal("Was expecting a Post")
+		}
+	}
+}
+
+func TestManyPayload_withLinks(t *testing.T) {
+	firstPageURL := "http://somesite.com/movies?page[limit]=50&page[offset]=50"
+	prevPageURL := "http://somesite.com/movies?page[limit]=50&page[offset]=0"
+	nextPageURL := "http://somesite.com/movies?page[limit]=50&page[offset]=100"
+	lastPageURL := "http://somesite.com/movies?page[limit]=50&page[offset]=500"
+
+	sample := map[string]interface{}{
+		"data": []interface{}{
+			map[string]interface{}{
+				"type": "posts",
+				"id":   "1",
+				"attributes": map[string]interface{}{
+					"body":  "First",
+					"title": "Post",
+				},
+			},
+			map[string]interface{}{
+				"type": "posts",
+				"id":   "2",
+				"attributes": map[string]interface{}{
+					"body":  "Second",
+					"title": "Post",
+				},
+			},
+		},
+		"links": map[string]interface{}{
+			KeyFirstPage:    firstPageURL,
+			KeyPreviousPage: prevPageURL,
+			KeyNextPage:     nextPageURL,
+			KeyLastPage:     lastPageURL,
+		},
+	}
+
+	data, err := json.Marshal(sample)
+	if err != nil {
+		t.Fatal(err)
+	}
+	in := bytes.NewReader(data)
+
+	payload := new(ManyPayload)
+	if err = json.NewDecoder(in).Decode(payload); err != nil {
+		t.Fatal(err)
+	}
+
+	if payload.Links == nil {
+		t.Fatal("Was expecting a non nil ptr Link field")
+	}
+
+	links := *payload.Links
+
+	first, ok := links[KeyFirstPage]
+	if !ok {
+		t.Fatal("Was expecting a non nil ptr Link field")
+	}
+	if e, a := firstPageURL, first; e != a {
+		t.Fatalf("Was expecting links.%s to have a value of %s, got %s", KeyFirstPage, e, a)
+	}
+
+	prev, ok := links[KeyPreviousPage]
+	if !ok {
+		t.Fatal("Was expecting a non nil ptr Link field")
+	}
+	if e, a := prevPageURL, prev; e != a {
+		t.Fatalf("Was expecting links.%s to have a value of %s, got %s", KeyPreviousPage, e, a)
+	}
+
+	next, ok := links[KeyNextPage]
+	if !ok {
+		t.Fatal("Was expecting a non nil ptr Link field")
+	}
+	if e, a := nextPageURL, next; e != a {
+		t.Fatalf("Was expecting links.%s to have a value of %s, got %s", KeyNextPage, e, a)
+	}
+
+	last, ok := links[KeyLastPage]
+	if !ok {
+		t.Fatal("Was expecting a non nil ptr Link field")
+	}
+	if e, a := lastPageURL, last; e != a {
+		t.Fatalf("Was expecting links.%s to have a value of %s, got %s", KeyLastPage, e, a)
+	}
+}
+
 func samplePayloadWithoutIncluded() map[string]interface{} {
 	return map[string]interface{}{
 		"data": map[string]interface{}{
@@ -555,6 +820,21 @@ func samplePayloadWithID() io.Reader {
 				"title":      "New blog",
 				"view_count": 1000,
 			},
+		},
+	}
+
+	out := bytes.NewBuffer(nil)
+	json.NewEncoder(out).Encode(payload)
+
+	return out
+}
+
+func samplePayloadWithBadTypes(m map[string]interface{}) io.Reader {
+	payload := &OnePayload{
+		Data: &Node{
+			ID:         "2",
+			Type:       "badtypes",
+			Attributes: m,
 		},
 	}
 
