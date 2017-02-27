@@ -24,45 +24,31 @@ import (
 // only difference that it also returns a map of the pagination links which are
 // included in the JSON API document. The map is used to parse the offset from
 // the links and return it to the user in a convenient way.
-func UnmarshalManyPayloadWithLinks(in io.Reader, t reflect.Type) ([]interface{}, map[string]string, error) {
+func UnmarshalManyPayloadWithLinks(in io.Reader, t reflect.Type) ([]interface{}, *Links, error) {
 	payload := new(ManyPayload)
 
 	if err := json.NewDecoder(in).Decode(payload); err != nil {
 		return nil, nil, err
 	}
 
-	links := *payload.Links
+	models := []interface{}{}         // will be populated from the "data"
+	includedMap := map[string]*Node{} // will be populate from the "included"
 
 	if payload.Included != nil {
-		includedMap := make(map[string]*Node)
 		for _, included := range payload.Included {
 			key := fmt.Sprintf("%s,%s", included.Type, included.ID)
 			includedMap[key] = included
 		}
-
-		var models []interface{}
-		for _, data := range payload.Data {
-			model := reflect.New(t.Elem())
-			err := unmarshalNode(data, model, &includedMap)
-			if err != nil {
-				return nil, nil, err
-			}
-			models = append(models, model.Interface())
-		}
-
-		return models, links, nil
 	}
-
-	var models []interface{}
 
 	for _, data := range payload.Data {
 		model := reflect.New(t.Elem())
-		err := unmarshalNode(data, model, nil)
+		err := unmarshalNode(data, model, &includedMap)
 		if err != nil {
 			return nil, nil, err
 		}
 		models = append(models, model.Interface())
 	}
 
-	return models, links, nil
+	return models, payload.Links, nil
 }
