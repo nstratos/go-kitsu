@@ -3,10 +3,12 @@ package kitsu
 import (
 	"reflect"
 	"testing"
+
+	"github.com/google/jsonapi"
 )
 
 func Test_parseOffset(t *testing.T) {
-	links := map[string]string{
+	links := jsonapi.Links{
 		"first": "http://somesite.com/movies?page[limit]=50&page[offset]=50",
 		"prev":  "http://somesite.com/movies?page[limit]=50&page[offset]=0",
 		"next":  "http://somesite.com/movies?page[limit]=50&page[offset]=100",
@@ -23,7 +25,7 @@ func Test_parseOffset(t *testing.T) {
 }
 
 func Test_parseOffset_pageNumberAndSize(t *testing.T) {
-	links := map[string]string{
+	links := jsonapi.Links{
 		"first": "http://example.com?page[number]=1&page[size]=50",
 		"prev":  "http://example.com?page[number]=13&page[size]=50",
 		"next":  "http://example.com?page[number]=15&page[size]=50",
@@ -42,7 +44,7 @@ func Test_parseOffset_pageNumberAndSize(t *testing.T) {
 }
 
 func Test_parseOffset_badLinks(t *testing.T) {
-	badLinks := []map[string]string{
+	badLinks := []jsonapi.Links{
 		{"first": ":"},
 		{"prev": ":"},
 		{"next": ":"},

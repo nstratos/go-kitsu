@@ -218,13 +218,13 @@ func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Resp
 	}
 
 	var v []interface{}
-	var links map[string]string
+	var links *jsonapi.Links
 	v, links, err = jsonapi.UnmarshalManyPayloadWithLinks(resp.Body, t)
 	if err != nil {
 		return nil, newResponse(resp), err
 	}
 
-	o, err := parseOffset(links)
+	o, err := parseOffset(*links)
 	if err != nil {
 		return nil, newResponse(resp), err
 	}

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+
+	"github.com/google/jsonapi"
 )
 
 type offset struct {
@@ -13,36 +15,52 @@ type offset struct {
 	next  int
 }
 
-func parseOffset(links map[string]string) (*offset, error) {
+func parseOffset(links jsonapi.Links) (*offset, error) {
 	var first, last, prev, next int
 	var err error
 
-	firstStr, ok := links["first"]
+	firstVal, ok := links["first"]
 	if ok {
+		firstStr, isString := firstVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("first link is not a string")
+		}
 		first, err = parseOffsetFromLink(firstStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse first link: %v", err)
 		}
 	}
 
-	lastStr, ok := links["last"]
+	lastVal, ok := links["last"]
 	if ok {
+		lastStr, isString := lastVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("last link is not a string")
+		}
 		last, err = parseOffsetFromLink(lastStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse last link: %v", err)
 		}
 	}
 
-	prevStr, ok := links["prev"]
+	prevVal, ok := links["prev"]
 	if ok {
+		prevStr, isString := prevVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("prev link is not a string")
+		}
 		prev, err = parseOffsetFromLink(prevStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse prev link: %v", err)
 		}
 	}
 
-	nextStr, ok := links["next"]
+	nextVal, ok := links["next"]
 	if ok {
+		nextStr, isString := nextVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("next link is not a string")
+		}
 		next, err = parseOffsetFromLink(nextStr)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse next link: %v", err)
