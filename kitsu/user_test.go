@@ -57,11 +57,11 @@ func TestUserService_List(t *testing.T) {
 		testMethod(t, r, "GET")
 		testHeader(t, r, "Accept", defaultMediaType)
 		testFormValues(t, r, values{
-			"page[limit]": "2",
+			"page[limit]":  "2",
 			"page[offset]": "0",
 			"filter[name]": "vikhyat",
-			"sort": "-followersCount",
-			"include": "libraryEntries",
+			"sort":         "-followersCount",
+			"include":      "libraryEntries",
 		})
 
 		const s = `
