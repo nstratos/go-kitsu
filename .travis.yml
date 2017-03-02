@@ -1,0 +1,15 @@
+language: go
+sudo: false
+
+go:
+  - 1.7.x
+  - 1.8.x
+
+install:
+  - # Skip
+
+script:
+  - go vet $(go list ./... | grep -v "vendor")
+  - diff -u <(echo -n) <(gofmt -d .)
+  - go tool vet .
+  - go test -v -race $(go list ./... | grep -v "vendor")
