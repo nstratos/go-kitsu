@@ -82,8 +82,13 @@ type Person struct {
 
 // Show returns details for a specific Anime by providing a unique identifier
 // of the anime e.g. 7442.
-func (s *AnimeService) Show(animeID string) (*Anime, *Response, error) {
+func (s *AnimeService) Show(animeID string, opt *Options) (*Anime, *Response, error) {
 	u := fmt.Sprintf(defaultAPIVersion+"anime/%s", animeID)
+
+	u, err := addOptions(u, opt)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {

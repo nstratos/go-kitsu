@@ -16,10 +16,21 @@ func TestAnimeService_Show(t *testing.T) {
 	mux.HandleFunc("/"+defaultAPIVersion+"anime/7442", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testHeader(t, r, "Accept", defaultMediaType)
+		testFormValues(t, r, values{
+			"filter[genres]": "sports,sci-fi",
+			"sort":           "-followersCount,-followingCount",
+			"include":        "media.genres,media.installments",
+		})
 		fmt.Fprintf(w, `{"data":{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}}`)
 	})
 
-	got, _, err := client.Anime.Show("7442")
+	opt := &Options{
+		Filter:    "genres",
+		FilterVal: []string{"sports", "sci-fi"},
+		Sort:      []string{"-followersCount", "-followingCount"},
+		Include:   []string{"media.genres", "media.installments"},
+	}
+	got, _, err := client.Anime.Show("7442", opt)
 	if err != nil {
 		t.Errorf("Anime.Show returned error: %v", err)
 	}
@@ -40,7 +51,7 @@ func TestAnimeService_Show_notFound(t *testing.T) {
 		http.Error(w, `{"errors":[{"title":"Record not found","detail":"The record identified by 0 could not be found.","code":"404","status":"404"}]}`, http.StatusNotFound)
 	})
 
-	_, resp, err := client.Anime.Show("0")
+	_, resp, err := client.Anime.Show("0", nil)
 	if err == nil {
 		t.Error("Expected HTTP 404 error.")
 	}
@@ -51,7 +62,7 @@ func TestAnimeService_Show_notFound(t *testing.T) {
 }
 
 func TestAnimeService_Show_invalidID(t *testing.T) {
-	_, _, err := client.Anime.Show("%")
+	_, _, err := client.Anime.Show("%", nil)
 	if err == nil {
 		t.Errorf("Expected error to be returned")
 	}
