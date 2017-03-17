@@ -95,6 +95,10 @@ func addOptions(s string, opt *Options) (string, error) {
 		return s, err
 	}
 
+	if opt == nil {
+		return u.String(), nil
+	}
+
 	v := u.Query()
 	if opt.PageLimit != 0 {
 		v.Set("page[limit]", strconv.Itoa(opt.PageLimit))
