@@ -128,6 +128,7 @@ func (s *AnimeService) List(opt *Options) ([]*Anime, *Response, error) {
 	for _, d := range data {
 		a, ok := d.(*Anime)
 		if !ok {
+			// This should never happen.
 			return nil, resp, fmt.Errorf("expected anime type %v but it was %T", animeType, a)
 		}
 		anime = append(anime, a)

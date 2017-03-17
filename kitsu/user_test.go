@@ -15,10 +15,18 @@ func TestUserService_Show(t *testing.T) {
 	mux.HandleFunc("/"+defaultAPIVersion+"users/29745", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testHeader(t, r, "Accept", defaultMediaType)
+		testFormValues(t, r, values{
+			"filter[name]": "chitanda",
+		})
 		fmt.Fprintf(w, `{"data":{"id":"29745","type":"users","attributes":{"name":"chitanda","lifeSpentOnAnime":550}}}`)
 	})
 
-	got, _, err := client.User.Show("29745")
+	opt := &Options{
+		Filter:    "name",
+		FilterVal: []string{"chitanda"},
+	}
+
+	got, _, err := client.User.Show("29745", opt)
 	if err != nil {
 		t.Errorf("User.Show returned error: %v", err)
 	}
@@ -39,7 +47,7 @@ func TestUserService_Show_notFound(t *testing.T) {
 		http.Error(w, `{"errors":[{"title":"Record not found","detail":"The record identified by 0 could not be found.","code":"404","status":"404"}]}`, http.StatusNotFound)
 	})
 
-	_, resp, err := client.User.Show("0")
+	_, resp, err := client.User.Show("0", nil)
 	if err == nil {
 		t.Error("Expected HTTP 404 error.")
 	}
