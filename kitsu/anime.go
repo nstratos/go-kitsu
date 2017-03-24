@@ -5,8 +5,11 @@ import (
 	"reflect"
 )
 
+// AnimeType represents all the possible anime show types.
 type AnimeType string
 
+// The possible anime show types. They are convenient for making comparisons
+// with Anime.ShowType.
 const (
 	AnimeTypeTV      AnimeType = "TV"
 	AnimeTypeSpecial AnimeType = "special"
@@ -14,16 +17,6 @@ const (
 	AnimeTypeONA     AnimeType = "ONA"
 	AnimeTypeMovie   AnimeType = "movie"
 	AnimeTypeMusic   AnimeType = "music"
-)
-
-type MangaType string
-
-const (
-	MangaTypeDrama   MangaType = "drama"
-	MangaTypeNovel   MangaType = "novel"
-	MangaTypeManhua  MangaType = "manhua"
-	MangaTypeOneshot MangaType = "oneshot"
-	MangaTypeDoujin  MangaType = "doujin"
 )
 
 // AnimeService handles communication with the anime related methods of the
