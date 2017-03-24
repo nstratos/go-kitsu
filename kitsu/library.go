@@ -12,10 +12,6 @@ const (
 
 // LibraryEntry represents a Kitsu user's library entry.
 type LibraryEntry struct {
-	// Unmarshaling of enum types likes LibraryEntryStatus is not supported by
-	// google/jsonapi so for fields like Status we are using the string type
-	// instead.
-
 	Status         string `jsonapi:"attr,status"`         // Status for related media. Can be compared with LibraryEntryStatus constants.
 	Progress       int    `jsonapi:"attr,progress"`       // How many episodes/chapters have been consumed, e.g. 22.
 	Reconsuming    bool   `jsonapi:"attr,reconsuming"`    // Whether the media is being reconsumed, e.g. false.

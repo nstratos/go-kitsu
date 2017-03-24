@@ -59,6 +59,16 @@ type Casting struct {
 // map[string]interface{} instead.
 //
 // See: https://github.com/google/jsonapi/issues/74
+//
+// Another limitation is being unable to unmarshal to custom types such as
+// "enum" types like AnimeType, MangaType and LibraryEntryStatus. These are
+// useful for doing comparisons and working with fields such as Anime.ShowType,
+// Manga.ShowType and LibraryEntry.Status.
+//
+// Because of this limitation the string type is used for those fields instead.
+// As such, instead of using those custom types, we keep the possible values as
+// untyped string constants to avoid unnecessary conversions when working with
+// those fields.
 
 // Character represents a Kitsu character like the fictional characters that
 // appear in anime, manga and drama. Character is a relationship of Casting.
