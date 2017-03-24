@@ -24,11 +24,10 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	setup(t)
 
 	// Get anime list with options to include specific limit and includes.
-	opt := &kitsu.Options{
-		PageLimit: results,
-		Include:   []string{"castings.character", "castings.person"},
-	}
-	list, resp, err := client.Anime.List(opt)
+	list, resp, err := client.Anime.List(
+		kitsu.Limit(results),
+		kitsu.Include("castings.character", "castings.person"),
+	)
 	if err != nil {
 		t.Fatal("client.Anime.List returned err:", err)
 	}
@@ -59,9 +58,10 @@ func TestAnimeServiceIntegration(t *testing.T) {
 		}
 	}
 
-	// Get details for first anime in the list using the same options as
-	// before. PageLimit is ignored by the kitsu API this time.
-	bebop, _, err := client.Anime.Show(list[0].ID, opt)
+	// Get details for the first anime in the list.
+	bebop, _, err := client.Anime.Show(list[0].ID,
+		kitsu.Include("castings.character", "castings.person"),
+	)
 	if err != nil {
 		t.Fatal("client.Anime.Show returned err:", err)
 	}

@@ -56,70 +56,6 @@ type Link struct {
 	Self string `json:"self"`
 }
 
-// Options specifies the optional parameters to various List methods that
-// support them.
-//
-// Pagination
-//
-// PageLimit and PageOffset provide pagination support. If PageLimit is not
-// specified they are both ignored.
-//
-// Filtering
-//
-// If Filter is specified (e.g. genres) then one or more filter values can be
-// passed in FilterVal (e.g. sports, sci-fi etc).
-//
-// Sorting
-//
-// Sort can be specified to provide sorting for one or more attributes (e.g.
-// averageRating for Anime). By default, sorts are applied in ascending order.
-// For descending order you can prepend a - to the sort parameter (e.g.
-// -averageRating for Anime).
-//
-// Includes
-//
-// You can include one or more related resources by specifying the
-// relationships in Include. You can also specify successive relationships
-// using a . (e.g. media.genres for library entries).
-type Options struct {
-	PageLimit  int
-	PageOffset int
-	Filter     string
-	FilterVal  []string
-	Sort       []string
-	Include    []string
-}
-
-func addOptions(s string, opt *Options) (string, error) {
-	u, err := url.Parse(s)
-	if err != nil {
-		return s, err
-	}
-
-	if opt == nil {
-		return u.String(), nil
-	}
-
-	v := u.Query()
-	if opt.PageLimit != 0 {
-		v.Set("page[limit]", strconv.Itoa(opt.PageLimit))
-		v.Set("page[offset]", strconv.Itoa(opt.PageOffset))
-	}
-	if opt.Filter != "" && opt.FilterVal != nil {
-		v.Set(fmt.Sprintf("filter[%s]", opt.Filter),
-			strings.Join(opt.FilterVal, ","))
-	}
-	if opt.Sort != nil {
-		v.Set("sort", strings.Join(opt.Sort, ","))
-	}
-	if opt.Include != nil {
-		v.Set("include", strings.Join(opt.Include, ","))
-	}
-
-	u.RawQuery = v.Encode()
-	return u.String(), nil
-}
-
 // NewClient returns a new kitsu.io API client.
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
@@ -137,15 +73,119 @@ func NewClient(httpClient *http.Client) *Client {
 	return c
 }
 
+// urlOption allows to specify URL parameters to the Kitsu API to change the
+// data that will be retrieved.
+type urlOption func(v *url.Values)
+
+// Pagination allows to choose how many pages of a resource to receive by
+// specifying pagination parameters limit and offset. Resources are paginated
+// by default.
+func Pagination(limit, offset int) urlOption {
+	return func(v *url.Values) {
+		v.Set("page[limit]", strconv.Itoa(limit))
+		v.Set("page[offset]", strconv.Itoa(offset))
+	}
+}
+
+// Limit allows to control the number of results that will be retrieved. It can
+// be used together with Offset to control the pagination results. Results have
+// a default limit.
+func Limit(limit int) urlOption {
+	return func(v *url.Values) {
+		v.Set("page[limit]", strconv.Itoa(limit))
+	}
+}
+
+// Offset is meant to be used together with Limit and allows to control the
+// offset of the pagination.
+func Offset(offset int) urlOption {
+	return func(v *url.Values) {
+		v.Set("page[offset]", strconv.Itoa(offset))
+	}
+}
+
+// Filter allows to query data that contains certain matching attributes or
+// relationships. For example, to retrieve all the anime of the Action genre,
+// "genres" can be passed as the attribute and "action" as one of the values
+// likes so:
+//
+//     Filter("genres", "action").
+//
+// Many values can be provided to be filtered like so:
+//
+//     Filter("genres", "action", "drama").
+//
+func Filter(attribute string, values ...string) urlOption {
+	return func(v *url.Values) {
+		v.Set(fmt.Sprintf("filter[%s]", attribute), strings.Join(values, ","))
+	}
+}
+
+// Search can be passed as an option and allows to search for media based on
+// query text.
+func Search(query string) urlOption {
+	return func(v *url.Values) {
+		v.Set("filter[text]", query)
+	}
+}
+
+// Sort can be specified to provide sorting for one or more attributes. By default, sorts are applied in ascending order.
+// For descending order a - can be prepended to the sort parameter (e.g.
+// -averageRating for Anime).
+//
+// For example to sort by the attribute "averageRating" of Anime:
+//
+//    Sort("averageRating")
+//
+// And for descending order:
+//
+//    Sort("-averageRating")
+//
+// Many sort parameters can be specified:
+//
+//    Sort("followersCount", "-followingCount")
+//
+func Sort(attributes ...string) urlOption {
+	return func(v *url.Values) {
+		v.Set("sort", strings.Join(attributes, ","))
+	}
+}
+
+// Include allows to include one or more related resources by specifying the
+// relationships and successive relationships using a dot notation. For example
+// for Anime to also include Casting:
+//
+//    Include("castings")
+//
+// If Casting is needed to also include Person and Character:
+//
+//    Include("castings.character", "castings.person"),
+//
+func Include(relationships ...string) urlOption {
+	return func(v *url.Values) {
+		v.Set("include", strings.Join(relationships, ","))
+	}
+}
+
 // NewRequest creates an API request. If a relative URL is provided in urlStr,
 // it will be resolved relative to the BaseURL of the Client. Relative URLs
 // should always be specified without a preceding slash. If body is specified,
 // it will be encoded to JSON and used as the request body.
-func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
+func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...urlOption) (*http.Request, error) {
 	rel, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
 	}
+
+	v := rel.Query()
+	if opts != nil {
+		for _, opt := range opts {
+			if opt != nil { // Avoid panic in case the user passes a nil option.
+				opt(&v)
+			}
+		}
+	}
+	rel.RawQuery = v.Encode()
 
 	var buf io.ReadWriter
 	if body != nil {

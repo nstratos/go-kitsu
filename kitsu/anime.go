@@ -82,15 +82,15 @@ type Person struct {
 
 // Show returns details for a specific Anime by providing a unique identifier
 // of the anime e.g. 7442.
-func (s *AnimeService) Show(animeID string, opt *Options) (*Anime, *Response, error) {
+func (s *AnimeService) Show(animeID string, opts ...urlOption) (*Anime, *Response, error) {
 	u := fmt.Sprintf(defaultAPIVersion+"anime/%s", animeID)
 
-	u, err := addOptions(u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
+	//u, err := addOptions(u, opt)
+	//if err != nil {
+	//	return nil, nil, err
+	//}
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -105,15 +105,10 @@ func (s *AnimeService) Show(animeID string, opt *Options) (*Anime, *Response, er
 
 // List returns a list of Anime. Optional parameters can be specified to filter
 // the search results and control pagination, sorting etc.
-func (s *AnimeService) List(opt *Options) ([]*Anime, *Response, error) {
+func (s *AnimeService) List(opts ...urlOption) ([]*Anime, *Response, error) {
 	u := defaultAPIVersion + "anime"
 
-	u, err := addOptions(u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, opts...)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -21,12 +21,7 @@ func TestUserService_Show(t *testing.T) {
 		fmt.Fprintf(w, `{"data":{"id":"29745","type":"users","attributes":{"name":"chitanda","lifeSpentOnAnime":550}}}`)
 	})
 
-	opt := &Options{
-		Filter:    "name",
-		FilterVal: []string{"chitanda"},
-	}
-
-	got, _, err := client.User.Show("29745", opt)
+	got, _, err := client.User.Show("29745", Filter("name", "chitanda"))
 	if err != nil {
 		t.Errorf("User.Show returned error: %v", err)
 	}
@@ -90,16 +85,12 @@ func TestUserService_List(t *testing.T) {
 		fmt.Fprint(w, s)
 	})
 
-	opt := &Options{
-		PageLimit:  2,
-		PageOffset: 0,
-		Filter:     "name",
-		FilterVal:  []string{"vikhyat"},
-		Sort:       []string{"-followersCount"},
-		Include:    []string{"libraryEntries"},
-	}
-
-	got, resp, err := client.User.List(opt)
+	got, resp, err := client.User.List(
+		Pagination(2, 0),
+		Filter("name", "vikhyat"),
+		Sort("-followersCount"),
+		Include("libraryEntries"),
+	)
 	if err != nil {
 		t.Errorf("User.List returned error: %v", err)
 	}

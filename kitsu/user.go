@@ -28,15 +28,10 @@ type User struct {
 
 // Show returns details for a specific User by providing the ID of the user
 // e.g. 29745.
-func (s *UserService) Show(userID string, opt *Options) (*User, *Response, error) {
+func (s *UserService) Show(userID string, opts ...urlOption) (*User, *Response, error) {
 	u := fmt.Sprintf(defaultAPIVersion+"users/%s", userID)
 
-	u, err := addOptions(u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -51,15 +46,10 @@ func (s *UserService) Show(userID string, opt *Options) (*User, *Response, error
 
 // List returns a list of Users. Optional parameters can be specified to filter
 // the search results and control pagination, sorting etc.
-func (s *UserService) List(opt *Options) ([]*User, *Response, error) {
+func (s *UserService) List(opts ...urlOption) ([]*User, *Response, error) {
 	u := defaultAPIVersion + "users"
 
-	u, err := addOptions(u, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, opts...)
 	if err != nil {
 		return nil, nil, err
 	}

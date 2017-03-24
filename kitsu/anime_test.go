@@ -24,13 +24,11 @@ func TestAnimeService_Show(t *testing.T) {
 		fmt.Fprintf(w, `{"data":{"id":"7442","type":"anime","attributes":{"slug":"attack-on-titan"}}}`)
 	})
 
-	opt := &Options{
-		Filter:    "genres",
-		FilterVal: []string{"sports", "sci-fi"},
-		Sort:      []string{"-followersCount", "-followingCount"},
-		Include:   []string{"media.genres", "media.installments"},
-	}
-	got, _, err := client.Anime.Show("7442", opt)
+	got, _, err := client.Anime.Show("7442",
+		Filter("genres", "sports", "sci-fi"),
+		Sort("-followersCount", "-followingCount"),
+		Include("media.genres", "media.installments"),
+	)
 	if err != nil {
 		t.Errorf("Anime.Show returned error: %v", err)
 	}
@@ -51,7 +49,7 @@ func TestAnimeService_Show_notFound(t *testing.T) {
 		http.Error(w, `{"errors":[{"title":"Record not found","detail":"The record identified by 0 could not be found.","code":"404","status":"404"}]}`, http.StatusNotFound)
 	})
 
-	_, resp, err := client.Anime.Show("0", nil)
+	_, resp, err := client.Anime.Show("0")
 	if err == nil {
 		t.Error("Expected HTTP 404 error.")
 	}
@@ -110,16 +108,12 @@ func TestAnimeService_List(t *testing.T) {
 		fmt.Fprint(w, s)
 	})
 
-	opt := &Options{
-		PageLimit:  2,
-		PageOffset: 0,
-		Filter:     "genres",
-		FilterVal:  []string{"sports", "sci-fi"},
-		Sort:       []string{"-followersCount", "-followingCount"},
-		Include:    []string{"media.genres", "media.installments"},
-	}
-
-	got, resp, err := client.Anime.List(opt)
+	got, resp, err := client.Anime.List(
+		Pagination(2, 0),
+		Filter("genres", "sports", "sci-fi"),
+		Sort("-followersCount", "-followingCount"),
+		Include("media.genres", "media.installments"),
+	)
 	if err != nil {
 		t.Errorf("Anime.List returned error: %v", err)
 	}
@@ -165,11 +159,7 @@ func TestAnimeService_List_addOptionsUnknownFilter(t *testing.T) {
 		fmt.Fprint(w, s)
 	})
 
-	opt := &Options{
-		Filter:    "unknown_filter",
-		FilterVal: []string{"unknown_value"},
-	}
-	_, _, err := client.Anime.List(opt)
+	_, _, err := client.Anime.List(Filter("unknown_filter", "unknown_value"))
 	if err == nil {
 		t.Fatal("Anime.List with unknown filter expected to return err")
 	}
@@ -288,11 +278,7 @@ func TestAnimeService_List_include(t *testing.T) {
 		fmt.Fprint(w, s)
 	})
 
-	opt := &Options{
-		Include: []string{"castings.character", "castings.person"},
-	}
-
-	got, resp, err := client.Anime.List(opt)
+	got, resp, err := client.Anime.List(Include("castings.character", "castings.person"))
 	if err != nil {
 		t.Errorf("Anime.List returned error: %v", err)
 	}
