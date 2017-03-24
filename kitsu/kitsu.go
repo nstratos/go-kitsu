@@ -105,6 +105,10 @@ func Filter(attribute string, values ...string) urlOption {
 
 // Search can be passed as an option and allows to search for media based on
 // query text.
+//
+// Search can only be used for media such as Anime and Manga. Passing the
+// search option to one of the User methods will return an error. Alternatively
+// the Filter option with the "name" attribute could be used instead.
 func Search(query string) urlOption {
 	return func(v *url.Values) {
 		v.Set("filter[text]", query)
