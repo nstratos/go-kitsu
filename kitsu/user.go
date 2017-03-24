@@ -12,18 +12,15 @@ import (
 // http://docs.kitsu17.apiary.io/#reference/users/library/show-user
 type UserService service
 
+// User represents a Kitsu user.
 type User struct {
-	ID        string `jsonapi:"primary,users"`
-	Name      string `jsonapi:"attr,name"`
-	About     string `jsonapi:"attr,about"`
-	LifeSpent int64  `jsonapi:"attr,lifeSpentOnAnime"`
-
-	// Unmarshaling of type struct and map[string]string is not supported by
-	// google/jsonapi. A workaround is to use map[string]interface{} instead.
-	Avatar map[string]interface{} `jsonapi:"attr,avatar"`
-
-	Waifu          *Character      `jsonapi:"relation,waifu"`
-	LibraryEntries []*LibraryEntry `jsonapi:"relation,libraryEntries"`
+	ID             string                 `jsonapi:"primary,users"`
+	Name           string                 `jsonapi:"attr,name"`
+	About          string                 `jsonapi:"attr,about"`
+	LifeSpent      int64                  `jsonapi:"attr,lifeSpentOnAnime"`
+	Avatar         map[string]interface{} `jsonapi:"attr,avatar"`
+	Waifu          *Character             `jsonapi:"relation,waifu"`
+	LibraryEntries []*LibraryEntry        `jsonapi:"relation,libraryEntries"`
 }
 
 // Show returns details for a specific User by providing the ID of the user

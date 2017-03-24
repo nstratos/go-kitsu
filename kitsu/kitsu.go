@@ -89,14 +89,23 @@ func Offset(offset int) urlOption {
 // Filter allows to query data that contains certain matching attributes or
 // relationships. For example, to retrieve all the anime of the Action genre,
 // "genres" can be passed as the attribute and "action" as one of the values
-// likes so:
+// like so:
 //
 //     Filter("genres", "action").
 //
-// Many values can be provided to be filtered like so:
+// More than one values can be provided to be filtered:
 //
 //     Filter("genres", "action", "drama").
 //
+// Some resources support additional filters.
+//
+// Anime: text, season, streamers
+//
+// Manga: text
+//
+// Drama: text
+//
+// LibraryEntry: userId
 func Filter(attribute string, values ...string) urlOption {
 	return func(v *url.Values) {
 		v.Set(fmt.Sprintf("filter[%s]", attribute), strings.Join(values, ","))
@@ -199,13 +208,17 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...url
 
 // Response is a Kitsu API response. It wraps the standard http.Response
 // returned from the request and provides access to pagination offsets for
-// responses that return an array of results.
+// responses that return many results.
 type Response struct {
 	*http.Response
 
 	Offset PageOffset
 }
 
+// PageOffset holds the offset values for each pagination link that is returned
+// in the JSON API document. It is contained in the Response that is returned
+// from each method of the API. A common usage is to use the Next value
+// together with the Pagination option to access the next page of results.
 type PageOffset struct {
 	Next, Prev, First, Last int
 }

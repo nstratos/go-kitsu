@@ -13,6 +13,7 @@ const (
 type LibraryEntry struct {
 	// Unmarshaling of enum types likes LibraryEntryStatus is not supported by
 	// google/jsonapi so we are using string instead.
+
 	Status         string `jsonapi:"attr,status"`         // Status for related media. One of: current, planned, completed, on_hold, dropped.
 	Progress       int    `jsonapi:"attr,progress"`       // How many episodes/chapters have been consumed, e.g. 22.
 	Reconsuming    bool   `jsonapi:"attr,reconsuming"`    // Whether the media is being reconsumed, e.g. false.

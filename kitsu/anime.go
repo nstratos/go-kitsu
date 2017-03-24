@@ -57,21 +57,21 @@ type Casting struct {
 	Person     *Person    `jsonapi:"relation,person"`
 }
 
-type Character struct {
-	ID          string `jsonapi:"primary,characters"`
-	Slug        string `jsonapi:"attr,slug"`
-	Name        string `jsonapi:"attr,name"`
-	MALID       int    `jsonapi:"attr,malId"`
-	Description string `jsonapi:"attr,description"`
-	//Image       CharacterImage `json:"image" jsonapi:"attr,image,omitempty"`
-}
-
-// BUG(google/jsonapi): Apparently unmarshaling struct fields does not work
-// yet. See https://github.com/google/jsonapi/issues/74
+// BUG(google/jsonapi): Unmarshaling of fields which are of type struct or
+// map[string]string is not supported by google/jsonapi. A workaround is to use
+// map[string]interface{} instead for fields such as Character.Image and
+// User.Avatar.
 //
-//type CharacterImage struct {
-//	Original string `json:"original" jsonapi:"attr,original,omitempty"`
-//}
+// See: https://github.com/google/jsonapi/issues/74
+
+type Character struct {
+	ID          string                 `jsonapi:"primary,characters"`
+	Slug        string                 `jsonapi:"attr,slug"`
+	Name        string                 `jsonapi:"attr,name"`
+	MALID       int                    `jsonapi:"attr,malId"`
+	Description string                 `jsonapi:"attr,description"`
+	Image       map[string]interface{} `jsonapi:"attr,image"`
+}
 
 type Person struct {
 	ID    string `jsonapi:"primary,people"`
