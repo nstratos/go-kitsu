@@ -5,18 +5,15 @@ import (
 	"reflect"
 )
 
-// AnimeType represents all the possible anime show types.
-type AnimeType string
-
 // The possible anime show types. They are convenient for making comparisons
 // with Anime.ShowType.
 const (
-	AnimeTypeTV      AnimeType = "TV"
-	AnimeTypeSpecial AnimeType = "special"
-	AnimeTypeOVA     AnimeType = "OVA"
-	AnimeTypeONA     AnimeType = "ONA"
-	AnimeTypeMovie   AnimeType = "movie"
-	AnimeTypeMusic   AnimeType = "music"
+	AnimeTypeTV      = "TV"
+	AnimeTypeSpecial = "special"
+	AnimeTypeOVA     = "OVA"
+	AnimeTypeONA     = "ONA"
+	AnimeTypeMovie   = "movie"
+	AnimeTypeMusic   = "music"
 )
 
 // AnimeService handles communication with the anime related methods of the
@@ -29,7 +26,8 @@ type AnimeService service
 // Anime represents a Kitsu anime.
 type Anime struct {
 	ID       string     `jsonapi:"primary,anime"`
-	Slug     string     `jsonapi:"attr,slug"`
+	Slug     string     `jsonapi:"attr,slug"`     // Unique slug used for page URLs, e.g. attack-on-titan.
+	ShowType string     `jsonapi:"attr,showType"` // Show format of the anime. Can be compared with AnimeType constants.
 	Genres   []*Genre   `jsonapi:"relation,genres"`
 	Castings []*Casting `jsonapi:"relation,castings"`
 }

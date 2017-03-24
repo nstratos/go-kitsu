@@ -90,13 +90,15 @@ func TestAnimeService_List(t *testing.T) {
 				"id": "7442",
 				"type": "anime",
 				"attributes": {
-					"slug": "attack-on-titan"
+					"slug": "attack-on-titan",
+					"showType": "TV"
 				}
 			}, {
 				"id": "7442",
 				"type": "anime",
 				"attributes": {
-					"slug": "attack-on-titan"
+					"slug": "attack-on-titan",
+					"showType": "TV"
 				}
 			}],
 			"links": {
@@ -119,8 +121,8 @@ func TestAnimeService_List(t *testing.T) {
 	}
 
 	want := []*Anime{
-		{ID: "7442", Slug: "attack-on-titan"},
-		{ID: "7442", Slug: "attack-on-titan"},
+		{ID: "7442", Slug: "attack-on-titan", ShowType: AnimeTypeTV},
+		{ID: "7442", Slug: "attack-on-titan", ShowType: AnimeTypeTV},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Anime.List mismatch\nhave: %#+v\nwant: %#+v", got, want)

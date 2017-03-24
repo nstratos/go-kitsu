@@ -1,16 +1,13 @@
 package kitsu
 
-// LibraryEntryStatus represents all the possible statuses for a library entry.
-type LibraryEntryStatus string
-
 // The possible library entry statuses. They are convenient for making
 // comparisons with LibraryEntry.Status.
 const (
-	LibraryEntryStatusCurrent   LibraryEntryStatus = "current"
-	LibraryEntryStatusPlanned   LibraryEntryStatus = "planned"
-	LibraryEntryStatusCompleted LibraryEntryStatus = "completed"
-	LibraryEntryStatusOnHold    LibraryEntryStatus = "on_hold"
-	LibraryEntryStatusDropped   LibraryEntryStatus = "dropped"
+	LibraryEntryStatusCurrent   = "current"
+	LibraryEntryStatusPlanned   = "planned"
+	LibraryEntryStatusCompleted = "completed"
+	LibraryEntryStatusOnHold    = "on_hold"
+	LibraryEntryStatusDropped   = "dropped"
 )
 
 // LibraryEntry represents a Kitsu user's library entry.
