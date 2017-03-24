@@ -9,6 +9,7 @@ install:
   - # Skip
 
 script:
+  - go get -t -v ./...
   - go vet $(go list ./... | grep -v "vendor")
   - diff -u <(echo -n) <(gofmt -d .)
   - go tool vet .
