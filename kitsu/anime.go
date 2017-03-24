@@ -33,6 +33,7 @@ const (
 // http://docs.kitsu17.apiary.io/#reference/media/anime/show-anime
 type AnimeService service
 
+// Anime represents a Kitsu anime.
 type Anime struct {
 	ID       string     `jsonapi:"primary,anime"`
 	Slug     string     `jsonapi:"attr,slug"`
@@ -40,6 +41,8 @@ type Anime struct {
 	Castings []*Casting `jsonapi:"relation,castings"`
 }
 
+// Genre represents a Kitsu media genre. Genre is a relationship of Kitsu media
+// types like Anime, Manga and Drama.
 type Genre struct {
 	ID          string `jsonapi:"primary,genres"`
 	Name        string `jsonapi:"attr,name"`
@@ -47,6 +50,8 @@ type Genre struct {
 	Description string `jsonapi:"attr,description"`
 }
 
+// Casting represents a Kitsu media casting. Casting is a relationship of Kitsu
+// media types like Anime, Manga and Drama.
 type Casting struct {
 	ID         string     `jsonapi:"primary,castings"`
 	Role       string     `jsonapi:"attr,role"`
@@ -58,12 +63,14 @@ type Casting struct {
 }
 
 // BUG(google/jsonapi): Unmarshaling of fields which are of type struct or
-// map[string]string is not supported by google/jsonapi. A workaround is to use
-// map[string]interface{} instead for fields such as Character.Image and
-// User.Avatar.
+// map[string]string is not supported by google/jsonapi. A workaround for
+// fields such as Character.Image and User.Avatar is to use
+// map[string]interface{} instead.
 //
 // See: https://github.com/google/jsonapi/issues/74
 
+// Character represents a Kitsu character like the fictional characters that
+// appear in anime, manga and drama. Character is a relationship of Casting.
 type Character struct {
 	ID          string                 `jsonapi:"primary,characters"`
 	Slug        string                 `jsonapi:"attr,slug"`
@@ -73,6 +80,8 @@ type Character struct {
 	Image       map[string]interface{} `jsonapi:"attr,image"`
 }
 
+// Person represents a person that is involved with a certain media. It can be
+// voice actors, animators, etc. Person is a relationship of Casting.
 type Person struct {
 	ID    string `jsonapi:"primary,people"`
 	Name  string `jsonapi:"attr,name"`

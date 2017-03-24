@@ -227,10 +227,11 @@ func newResponse(r *http.Response) *Response {
 	return &Response{Response: r}
 }
 
-// Do sends an API request and returns the API response. If an API error has
-// occurred both the response and the error will be returned in case the caller
-// wishes to further inspect the response. If v is passed as an argument, then
-// the API response is JSON decoded and stored to v.
+// Do sends an API request and returns the API response for resources that
+// return one result. If an API error has occurred both the response and the
+// error will be returned in case the caller wishes to inspect the response
+// further. If v is passed as an argument, then the API response is JSON
+// decoded and stored to v.
 func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -250,6 +251,11 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	return newResponse(resp), err
 }
 
+// DoMany sends an API request and returns the API response for resources that
+// return many results. If an API error has occurred both the response and the
+// error will be returned in case the caller wishes to inspect the response
+// further. The type t of the results has to be provided. The response contains
+// offset values to aid with pagination.
 func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -308,6 +314,13 @@ func (e *Error) Error() string {
 		e.Status, e.Code, e.Title, e.Detail)
 }
 
+// checkResponse checks the API response for errors and returns them if
+// present. A response is considered an error if it has a status code outside
+// the 200 range.
+//
+// API error responses are expected to have either no response body, or a JSON
+// response body that maps to ErrorResponse. Any other response body will be
+// silently ignored.
 func checkResponse(r *http.Response) error {
 	if c := r.StatusCode; 200 <= c && c <= 299 {
 		return nil
