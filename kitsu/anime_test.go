@@ -135,7 +135,7 @@ func TestAnimeService_List(t *testing.T) {
 	}
 }
 
-func TestAnimeService_List_addOptionsUnknownFilter(t *testing.T) {
+func TestAnimeService_List_filterOptionWithUnknownAttribute(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -143,19 +143,19 @@ func TestAnimeService_List_addOptionsUnknownFilter(t *testing.T) {
 		testMethod(t, r, "GET")
 		testHeader(t, r, "Accept", defaultMediaType)
 		testFormValues(t, r, values{
-			"filter[unknown_filter]": "unknown_value",
+			"filter[unknown_attribute]": "unknown_value",
 		})
 
 		w.WriteHeader(http.StatusBadRequest)
-		const s = `{"errors":[{"title":"Filter not allowed","detail":"unknown_filter is not allowed.","code":"102","status":"400"}]}`
+		const s = `{"errors":[{"title":"Filter not allowed","detail":"unknown_attribute is not allowed.","code":"102","status":"400"}]}`
 		fmt.Fprint(w, s)
 	})
 
-	_, _, err := client.Anime.List(Filter("unknown_filter", "unknown_value"))
+	_, _, err := client.Anime.List(Filter("unknown_attribute", "unknown_value"))
 	if err == nil {
 		t.Fatal("Anime.List with unknown filter expected to return err")
 	}
-	want := []Error{{Code: "102", Detail: "unknown_filter is not allowed.", Status: "400", Title: "Filter not allowed"}}
+	want := []Error{{Code: "102", Detail: "unknown_attribute is not allowed.", Status: "400", Title: "Filter not allowed"}}
 	errResp, ok := err.(*ErrorResponse)
 	if !ok {
 		t.Fatal("Anime.List with unknown filter expected to return err of type ErrorResponse")
