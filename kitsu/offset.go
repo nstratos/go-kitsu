@@ -8,71 +8,32 @@ import (
 	"github.com/nstratos/jsonapi"
 )
 
-type offset struct {
-	first int
-	last  int
-	prev  int
-	next  int
-}
-
-func parseOffset(links jsonapi.Links) (*offset, error) {
-	var first, last, prev, next int
+func parseOffset(links jsonapi.Links) (*PageOffset, error) {
+	m := map[string]int{"first": 0, "last": 0, "prev": 0, "next": 0}
 	var err error
 
-	firstVal, ok := links["first"]
-	if ok {
-		firstStr, isString := firstVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("first link is not a string")
+	for name := range m {
+		val, ok := links[name]
+		if ok {
+			str, isString := val.(string)
+			if !isString {
+				return nil, fmt.Errorf("%q link is not a string", name)
+			}
+			m[name], err = parseOffsetFromLink(str)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse %q link: %v", name, err)
+			}
 		}
-		first, err = parseOffsetFromLink(firstStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse first link: %v", err)
-		}
+
 	}
 
-	lastVal, ok := links["last"]
-	if ok {
-		lastStr, isString := lastVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("last link is not a string")
-		}
-		last, err = parseOffsetFromLink(lastStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse last link: %v", err)
-		}
+	o := &PageOffset{
+		First: m["first"],
+		Last:  m["last"],
+		Prev:  m["prev"],
+		Next:  m["next"],
 	}
 
-	prevVal, ok := links["prev"]
-	if ok {
-		prevStr, isString := prevVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("prev link is not a string")
-		}
-		prev, err = parseOffsetFromLink(prevStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse prev link: %v", err)
-		}
-	}
-
-	nextVal, ok := links["next"]
-	if ok {
-		nextStr, isString := nextVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("next link is not a string")
-		}
-		next, err = parseOffsetFromLink(nextStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse next link: %v", err)
-		}
-	}
-
-	o := &offset{
-		first: first,
-		last:  last,
-		prev:  prev,
-		next:  next,
-	}
 	return o, nil
 }
 

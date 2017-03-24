@@ -106,16 +106,9 @@ func TestUserService_List(t *testing.T) {
 		data, _ = json.Marshal(want)
 		fmt.Println(string(data))
 	}
-	if got, want := resp.FirstOffset, 0; got != want {
-		t.Errorf("Anime.List response FirstOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.LastOffset, 0; got != want {
-		t.Errorf("Anime.List response LastOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.NextOffset, 0; got != want {
-		t.Errorf("Anime.List response NextOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.PrevOffset, 0; got != want {
-		t.Errorf("Anime.List response PrevOffset = %d, want %d", got, want)
+
+	offset := PageOffset{}
+	if got, want := resp.Offset, offset; got != want {
+		t.Errorf("User.List response Offset = %+v, want %+v", got, want)
 	}
 }

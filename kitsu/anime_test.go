@@ -129,17 +129,9 @@ func TestAnimeService_List(t *testing.T) {
 		data, _ = json.Marshal(want)
 		fmt.Println(string(data))
 	}
-	if got, want := resp.FirstOffset, 0; got != want {
-		t.Errorf("Anime.List response FirstOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.LastOffset, 498; got != want {
-		t.Errorf("Anime.List response LastOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.NextOffset, 50; got != want {
-		t.Errorf("Anime.List response NextOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.PrevOffset, 0; got != want {
-		t.Errorf("Anime.List response PrevOffset = %d, want %d", got, want)
+	offset := PageOffset{First: 0, Last: 498, Next: 50, Prev: 0}
+	if got, want := resp.Offset, offset; got != want {
+		t.Errorf("Anime.List response Offset = %+v, want %+v", got, want)
 	}
 }
 
@@ -314,16 +306,9 @@ func TestAnimeService_List_include(t *testing.T) {
 		data, _ = json.Marshal(want)
 		fmt.Println(string(data))
 	}
-	if got, want := resp.FirstOffset, 0; got != want {
-		t.Errorf("Anime.List response FirstOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.LastOffset, 498; got != want {
-		t.Errorf("Anime.List response LastOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.NextOffset, 50; got != want {
-		t.Errorf("Anime.List response NextOffset = %d, want %d", got, want)
-	}
-	if got, want := resp.PrevOffset, 0; got != want {
-		t.Errorf("Anime.List response PrevOffset = %d, want %d", got, want)
+
+	offset := PageOffset{First: 0, Last: 498, Next: 50, Prev: 0}
+	if got, want := resp.Offset, offset; got != want {
+		t.Errorf("Anime.List response Offset = %+v, want %+v", got, want)
 	}
 }

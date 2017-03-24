@@ -18,7 +18,7 @@ func Test_parseOffset(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseOffset returned err: %v", err)
 	}
-	got, want := o, &offset{first: 50, prev: 0, next: 100, last: 500}
+	got, want := o, &PageOffset{First: 50, Prev: 0, Next: 100, Last: 500}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("parseOffset = %#v, want %#v", got, want)
 	}
@@ -37,7 +37,7 @@ func Test_parseOffset_pageNumberAndSize(t *testing.T) {
 	}
 	// The Kitsu API uses offset & limit instead of number & size so we expect
 	// nothing.
-	got, want := o, &offset{}
+	got, want := o, &PageOffset{}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("parseOffset = %#v, want %#v", got, want)
 	}

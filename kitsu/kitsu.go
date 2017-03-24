@@ -199,10 +199,11 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...url
 type Response struct {
 	*http.Response
 
-	NextOffset  int
-	PrevOffset  int
-	FirstOffset int
-	LastOffset  int
+	Offset PageOffset
+}
+
+type PageOffset struct {
+	Next, Prev, First, Last int
 }
 
 func newResponse(r *http.Response) *Response {
@@ -257,11 +258,8 @@ func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Resp
 		return nil, newResponse(resp), err
 	}
 	response := &Response{
-		Response:    resp,
-		FirstOffset: o.first,
-		LastOffset:  o.last,
-		PrevOffset:  o.prev,
-		NextOffset:  o.next,
+		Response: resp,
+		Offset:   *o,
 	}
 	return v, response, err
 }

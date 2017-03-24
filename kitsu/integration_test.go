@@ -33,17 +33,17 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	}
 
 	// Check page offsets in Response.
-	if got, want := resp.NextOffset, results; got != want {
-		t.Fatalf("client.Anime.List NextOffset = %d, want %d", got, want)
+	if got, want := resp.Offset.Next, results; got != want {
+		t.Fatalf("client.Anime.List Offset.Next = %d, want %d", got, want)
 	}
-	if got, want := resp.PrevOffset, 0; got != want {
-		t.Fatalf("client.Anime.List PrevOffset = %d, want %d", got, want)
+	if got, want := resp.Offset.Prev, 0; got != want {
+		t.Fatalf("client.Anime.List Offset.Prev = %d, want %d", got, want)
 	}
-	if got, want := resp.FirstOffset, 0; got != want {
-		t.Fatalf("client.Anime.List FirstOffset = %d, want %d", got, want)
+	if got, want := resp.Offset.First, 0; got != want {
+		t.Fatalf("client.Anime.List Offset.First = %d, want %d", got, want)
 	}
-	if resp.LastOffset == 0 {
-		t.Fatalf("client.Anime.List LastOffset must not be 0")
+	if resp.Offset.Last == 0 {
+		t.Fatalf("client.Anime.List Offset.Last must not be 0")
 	}
 
 	// Test that the number of results is the same as we asked in the options.
