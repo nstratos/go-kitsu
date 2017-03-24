@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/jsonapi"
+	"github.com/nstratos/jsonapi"
 )
 
 const (

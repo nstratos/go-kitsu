@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/google/jsonapi"
+	"github.com/nstratos/jsonapi"
 )
 
 type offset struct {

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/jsonapi"
+	"github.com/nstratos/jsonapi"
 )
 
 func Test_parseOffset(t *testing.T) {
