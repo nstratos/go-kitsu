@@ -55,14 +55,14 @@ func NewClient(httpClient *http.Client) *Client {
 	return c
 }
 
-// urlOption allows to specify URL parameters to the Kitsu API to change the
+// URLOption allows to specify URL parameters to the Kitsu API to change the
 // data that will be retrieved.
-type urlOption func(v *url.Values)
+type URLOption func(v *url.Values)
 
 // Pagination allows to choose how many pages of a resource to receive by
 // specifying pagination parameters limit and offset. Resources are paginated
 // by default.
-func Pagination(limit, offset int) urlOption {
+func Pagination(limit, offset int) URLOption {
 	return func(v *url.Values) {
 		v.Set("page[limit]", strconv.Itoa(limit))
 		v.Set("page[offset]", strconv.Itoa(offset))
@@ -72,7 +72,7 @@ func Pagination(limit, offset int) urlOption {
 // Limit allows to control the number of results that will be retrieved. It can
 // be used together with Offset to control the pagination results. Results have
 // a default limit.
-func Limit(limit int) urlOption {
+func Limit(limit int) URLOption {
 	return func(v *url.Values) {
 		v.Set("page[limit]", strconv.Itoa(limit))
 	}
@@ -80,7 +80,7 @@ func Limit(limit int) urlOption {
 
 // Offset is meant to be used together with Limit and allows to control the
 // offset of the pagination.
-func Offset(offset int) urlOption {
+func Offset(offset int) URLOption {
 	return func(v *url.Values) {
 		v.Set("page[offset]", strconv.Itoa(offset))
 	}
@@ -106,7 +106,7 @@ func Offset(offset int) urlOption {
 // Drama: text
 //
 // LibraryEntry: userId
-func Filter(attribute string, values ...string) urlOption {
+func Filter(attribute string, values ...string) URLOption {
 	return func(v *url.Values) {
 		v.Set(fmt.Sprintf("filter[%s]", attribute), strings.Join(values, ","))
 	}
@@ -118,7 +118,7 @@ func Filter(attribute string, values ...string) urlOption {
 // Search can only be used for media such as Anime and Manga. Passing the
 // search option to one of the User methods will return an error. Alternatively
 // the Filter option with the "name" attribute could be used instead.
-func Search(query string) urlOption {
+func Search(query string) URLOption {
 	return func(v *url.Values) {
 		v.Set("filter[text]", query)
 	}
@@ -140,7 +140,7 @@ func Search(query string) urlOption {
 //
 //    Sort("followersCount", "-followingCount")
 //
-func Sort(attributes ...string) urlOption {
+func Sort(attributes ...string) URLOption {
 	return func(v *url.Values) {
 		v.Set("sort", strings.Join(attributes, ","))
 	}
@@ -156,7 +156,7 @@ func Sort(attributes ...string) urlOption {
 //
 //    Include("castings.character", "castings.person"),
 //
-func Include(relationships ...string) urlOption {
+func Include(relationships ...string) URLOption {
 	return func(v *url.Values) {
 		v.Set("include", strings.Join(relationships, ","))
 	}
@@ -166,7 +166,7 @@ func Include(relationships ...string) urlOption {
 // it will be resolved relative to the BaseURL of the Client. Relative URLs
 // should always be specified without a preceding slash. If body is specified,
 // it will be encoded to JSON and used as the request body.
-func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...urlOption) (*http.Request, error) {
+func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URLOption) (*http.Request, error) {
 	rel, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err

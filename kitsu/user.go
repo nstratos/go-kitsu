@@ -25,7 +25,7 @@ type User struct {
 
 // Show returns details for a specific User by providing the ID of the user
 // e.g. 29745.
-func (s *UserService) Show(userID string, opts ...urlOption) (*User, *Response, error) {
+func (s *UserService) Show(userID string, opts ...URLOption) (*User, *Response, error) {
 	u := fmt.Sprintf(defaultAPIVersion+"users/%s", userID)
 
 	req, err := s.client.NewRequest("GET", u, nil, opts...)
@@ -43,7 +43,7 @@ func (s *UserService) Show(userID string, opts ...urlOption) (*User, *Response, 
 
 // List returns a list of Users. Optional parameters can be specified to filter
 // the search results and control pagination, sorting etc.
-func (s *UserService) List(opts ...urlOption) ([]*User, *Response, error) {
+func (s *UserService) List(opts ...URLOption) ([]*User, *Response, error) {
 	u := defaultAPIVersion + "users"
 
 	req, err := s.client.NewRequest("GET", u, nil, opts...)
