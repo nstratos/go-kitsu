@@ -292,6 +292,9 @@ func (c *Client) DoOne(req *http.Request, v interface{}) (*Response, error) {
 // offset values to aid with pagination.
 func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Response, error) {
 	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	defer resp.Body.Close()
 
