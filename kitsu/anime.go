@@ -2,7 +2,10 @@ package kitsu
 
 import (
 	"fmt"
+	"io"
 	"reflect"
+
+	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 // The possible anime show types. They are convenient for making comparisons
@@ -26,10 +29,10 @@ type AnimeService service
 // Anime represents a Kitsu anime.
 type Anime struct {
 	ID       string     `jsonapi:"primary,anime"`
-	Slug     string     `jsonapi:"attr,slug"`     // Unique slug used for page URLs, e.g. attack-on-titan.
-	ShowType string     `jsonapi:"attr,showType"` // Show format of the anime. Can be compared with AnimeType constants.
-	Genres   []*Genre   `jsonapi:"relation,genres"`
-	Castings []*Casting `jsonapi:"relation,castings"`
+	Slug     string     `jsonapi:"attr,slug,omitempty"`     // Unique slug used for page URLs, e.g. attack-on-titan.
+	ShowType string     `jsonapi:"attr,showType,omitempty"` // Show format of the anime. Can be compared with AnimeType constants.
+	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
+	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
 }
 
 // Genre represents a Kitsu media genre. Genre is a relationship of Kitsu media
@@ -100,10 +103,15 @@ func (s *AnimeService) Show(animeID string, opts ...URLOption) (*Anime, *Respons
 		return nil, nil, err
 	}
 
-	a := new(Anime)
-	resp, err := s.client.Do(req, a)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, resp, err
+	}
+	defer resp.Body.Close()
+
+	a, err := decodeAnime(resp.Body)
+	if err != nil {
+		return nil, nil, err
 	}
 	return a, resp, nil
 }
@@ -118,21 +126,39 @@ func (s *AnimeService) List(opts ...URLOption) ([]*Anime, *Response, error) {
 		return nil, nil, err
 	}
 
-	animeType := reflect.TypeOf(&Anime{})
-	data, resp, err := s.client.DoMany(req, animeType)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, resp, err
+	}
+	defer resp.Body.Close()
+
+	anime, o, err := decodeAnimeList(resp.Body)
+	if err != nil {
+		return nil, resp, err
+	}
+	resp.Offset = o
+
+	return anime, resp, nil
+}
+
+func decodeAnime(r io.Reader) (*Anime, error) {
+	a := new(Anime)
+	err := jsonapi.DecodeOne(r, a)
+	return a, err
+}
+
+func decodeAnimeList(r io.Reader) ([]*Anime, PageOffset, error) {
+	data, o, err := jsonapi.DecodeMany(r, reflect.TypeOf(&Anime{}))
+	if err != nil {
+		return nil, PageOffset{}, err
 	}
 
 	anime := make([]*Anime, 0, len(data))
 	for _, d := range data {
-		a, ok := d.(*Anime)
-		if !ok {
-			// This should never happen.
-			return nil, resp, fmt.Errorf("expected anime type %v but it was %T", animeType, a)
+		if a, ok := d.(*Anime); ok {
+			anime = append(anime, a)
 		}
-		anime = append(anime, a)
 	}
 
-	return anime, resp, nil
+	return anime, makePageOffset(o), nil
 }
