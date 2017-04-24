@@ -26,6 +26,7 @@ type User struct {
 	Waifu          *Character      `jsonapi:"relation,waifu,omitempty"`
 	LibraryEntries []*LibraryEntry `jsonapi:"relation,libraryEntries,omitempty"`
 }
+
 type Avatar struct {
 	Original string
 }

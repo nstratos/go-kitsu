@@ -73,6 +73,7 @@ func decodeLibraryEntry(r io.Reader) (*LibraryEntry, error) {
 	return e, err
 }
 
+// Create creates a library entry. This method needs authentication.
 func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) ([]*LibraryEntry, *Response, error) {
 	u := defaultAPIVersion + "library-entries"
 
