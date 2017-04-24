@@ -1,7 +1,6 @@
 package kitsu
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -78,23 +77,55 @@ func TestClient_NewRequest(t *testing.T) {
 	c := NewClient(nil)
 
 	inURL, outURL := "/foo", defaultBaseURL+"foo"
-	inBody, outBody := &struct{ Foo string }{Foo: "bar"}, `{"Foo":"bar"}`+"\n"
-	req, _ := c.NewRequest("GET", inURL, inBody)
+	req, err := c.NewRequest("GET", inURL, nil)
+	if err != nil {
+		t.Fatalf("NewRequest(%q) returned err: %v", inURL, err)
+	}
 
 	// Test that the client's base URL is added to the endpoint.
 	if got, want := req.URL.String(), outURL; got != want {
 		t.Errorf("NewRequest(%q) URL is %q, want %q", inURL, got, want)
 	}
 
-	// Test that body gets encoded to JSON.
-	body, _ := ioutil.ReadAll(req.Body)
-	if got, want := string(body), outBody; got != want {
-		t.Errorf("NewRequest(%#v) Body is \n%q, want \n%q", inBody, got, want)
-	}
+}
 
-	// Test that the correct Content-Type gets added.
-	if got, want := req.Header.Get("Content-Type"), defaultMediaType; got != want {
-		t.Errorf("NewRequest() Content-Type is %q, want %q", got, want)
+func TestClient_NewRequest_encodeUnknownType(t *testing.T) {
+	c := NewClient(nil)
+
+	body := &struct{ Foo string }{Foo: "bar"}
+	_, err := c.NewRequest("GET", "/foo", body)
+	if err == nil {
+		t.Errorf("NewRequest(%#v) expected to return err", body)
+	}
+}
+
+func TestClient_NewRequest_encode(t *testing.T) {
+	var tests = []struct {
+		in  interface{}
+		out string
+	}{
+		{
+			&Anime{ID: "1"},
+			`{"data":{"type":"anime","id":"1"}}` + "\n",
+		},
+	}
+	c := NewClient(nil)
+	for _, tt := range tests {
+		req, err := c.NewRequest("GET", "/foo", tt.in)
+		if err != nil {
+			t.Fatalf("NewRequest(%#v) returned err: %v", tt.in, err)
+		}
+
+		// Test that body gets encoded to JSON API.
+		body, _ := ioutil.ReadAll(req.Body)
+		if got, want := string(body), tt.out; got != want {
+			t.Errorf("NewRequest(%#v) Body \nhave: %q\nwant: %q", tt.in, got, want)
+		}
+
+		// Test that the correct Content-Type gets added.
+		if got, want := req.Header.Get("Content-Type"), defaultMediaType; got != want {
+			t.Errorf("NewRequest() Content-Type is %q, want %q", got, want)
+		}
 	}
 }
 
@@ -110,22 +141,22 @@ func TestClient_NewRequest_badURL(t *testing.T) {
 	}
 }
 
-func TestClient_NewRequest_badBody(t *testing.T) {
-	c := NewClient(nil)
-
-	type Foo struct {
-		Bar map[interface{}]interface{}
-	}
-	inBody := &Foo{}
-	_, err := c.NewRequest("GET", "/", inBody)
-
-	if err == nil {
-		t.Errorf("NewRequest(%#v) should return err", inBody)
-	}
-	if err, ok := err.(*json.UnsupportedTypeError); !ok {
-		t.Errorf("Expected JSON Unsupported type error, got %#v.", err)
-	}
-}
+//func TestClient_NewRequest_badBody(t *testing.T) {
+//	c := NewClient(nil)
+//
+//	type Foo struct {
+//		Bar map[interface{}]interface{}
+//	}
+//	inBody := &Foo{}
+//	_, err := c.NewRequest("GET", "/", inBody)
+//
+//	if err == nil {
+//		t.Errorf("NewRequest(%#v) should return err", inBody)
+//	}
+//	if err, ok := err.(*json.UnsupportedTypeError); !ok {
+//		t.Errorf("Expected JSON Unsupported type error, got %#v.", err)
+//	}
+//}
 
 func TestClient_NewRequest_emptyBody(t *testing.T) {
 	c := NewClient(nil)
@@ -155,7 +186,7 @@ func TestClient_Do(t *testing.T) {
 
 	req, _ := client.NewRequest("GET", "/", nil)
 	got := new(foo)
-	_, _ = client.Do(req, got)
+	_, _ = client.DoOne(req, got)
 
 	want := &foo{Bar: "foobar"}
 	if !reflect.DeepEqual(got, want) {
@@ -172,7 +203,7 @@ func TestClient_Do_httpError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	_, err := client.Do(req, nil)
+	_, err := client.DoOne(req, nil)
 	if err == nil {
 		t.Error("Expected HTTP 400 error.")
 	}
@@ -187,7 +218,7 @@ func TestClient_Do_redirectLoop(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	_, err := client.Do(req, nil)
+	_, err := client.DoOne(req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
