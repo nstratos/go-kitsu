@@ -20,7 +20,7 @@ func Encode(w io.Writer, v interface{}) (err error) {
 			if _, ok := r.(runtime.Error); ok {
 				panic(r)
 			}
-			err = fmt.Errorf(errFormat+": %v", v, r.(error))
+			err = fmt.Errorf(errFormat+": %v", v, r)
 		}
 	}()
 	if isZeroOfUnderlyingType(v) {
