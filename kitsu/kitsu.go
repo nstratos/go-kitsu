@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nstratos/jsonapi"
+	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 const (
@@ -185,9 +185,8 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
-		encErr := json.NewEncoder(buf).Encode(body)
-		if encErr != nil {
-			return nil, encErr
+		if err := encode(buf, body); err != nil {
+			return nil, err
 		}
 	}
 
@@ -204,6 +203,17 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	req.Header.Set("Accept", defaultMediaType)
 
 	return req, nil
+}
+
+func encode(w io.Writer, v interface{}) error {
+	switch v := v.(type) {
+	default:
+		return fmt.Errorf("cannot encode unknown type %T", v)
+	case *Anime, *User, *LibraryEntry:
+		return jsonapi.EncodeOne(w, v)
+	case []*Anime, []*User, []*LibraryEntry:
+		return jsonapi.EncodeMany(w, v)
+	}
 }
 
 // Response is a Kitsu API response. It wraps the standard http.Response
@@ -223,8 +233,30 @@ type PageOffset struct {
 	Next, Prev, First, Last int
 }
 
+func makePageOffset(o jsonapi.Offset) PageOffset {
+	return PageOffset{
+		First: o.First,
+		Next:  o.Next,
+		Last:  o.Last,
+		Prev:  o.Prev,
+	}
+}
+
 func newResponse(r *http.Response) *Response {
 	return &Response{Response: r}
+}
+
+func (c *Client) Do(req *http.Request) (*Response, error) {
+
+	dumpRequest(req, true)
+
+	resp, err := c.client.Do(req)
+	dumpResponse(resp, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return newResponse(resp), checkResponse(resp)
 }
 
 // Do sends an API request and returns the API response for resources that
@@ -232,7 +264,7 @@ func newResponse(r *http.Response) *Response {
 // error will be returned in case the caller wishes to inspect the response
 // further. If v is passed as an argument, then the API response is JSON
 // decoded and stored to v.
-func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
+func (c *Client) DoOne(req *http.Request, v interface{}) (*Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -246,7 +278,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	}
 
 	if v != nil {
-		err = jsonapi.UnmarshalPayload(resp.Body, v)
+		err = jsonapi.DecodeOne(resp.Body, v)
 	}
 	return newResponse(resp), err
 }
@@ -258,9 +290,6 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 // offset values to aid with pagination.
 func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Response, error) {
 	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	defer resp.Body.Close()
 
@@ -269,20 +298,10 @@ func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Resp
 		return nil, newResponse(resp), err
 	}
 
-	var v []interface{}
-	var links *jsonapi.Links
-	v, links, err = jsonapi.UnmarshalManyPayloadWithLinks(resp.Body, t)
-	if err != nil {
-		return nil, newResponse(resp), err
-	}
-
-	o, err := parseOffset(*links)
-	if err != nil {
-		return nil, newResponse(resp), err
-	}
+	v, o, err := jsonapi.DecodeMany(resp.Body, t)
 	response := &Response{
 		Response: resp,
-		Offset:   *o,
+		Offset:   makePageOffset(o),
 	}
 	return v, response, err
 }
