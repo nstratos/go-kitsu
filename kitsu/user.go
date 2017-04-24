@@ -2,7 +2,10 @@ package kitsu
 
 import (
 	"fmt"
+	"io"
 	"reflect"
+
+	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 // UserService handles communication with the user related methods of the
@@ -14,13 +17,17 @@ type UserService service
 
 // User represents a Kitsu user.
 type User struct {
-	ID             string                 `jsonapi:"primary,users"`
-	Name           string                 `jsonapi:"attr,name"`
-	About          string                 `jsonapi:"attr,about"`
-	LifeSpent      int64                  `jsonapi:"attr,lifeSpentOnAnime"`
-	Avatar         map[string]interface{} `jsonapi:"attr,avatar"`
-	Waifu          *Character             `jsonapi:"relation,waifu"`
-	LibraryEntries []*LibraryEntry        `jsonapi:"relation,libraryEntries"`
+	ID        string `jsonapi:"primary,users"`
+	Name      string `jsonapi:"attr,name,omitempty"`
+	About     string `jsonapi:"attr,about,omitempty"`
+	LifeSpent int64  `jsonapi:"attr,lifeSpentOnAnime,omitempty"`
+	//Avatar    map[string]interface{} `jsonapi:"attr,avatar,omitempty"`
+	//Avatar         Avatar          `jsonapi:"attr,avatar,omitempty"`
+	Waifu          *Character      `jsonapi:"relation,waifu,omitempty"`
+	LibraryEntries []*LibraryEntry `jsonapi:"relation,libraryEntries,omitempty"`
+}
+type Avatar struct {
+	Original string
 }
 
 // Show returns details for a specific User by providing the ID of the user
@@ -33,12 +40,23 @@ func (s *UserService) Show(userID string, opts ...URLOption) (*User, *Response, 
 		return nil, nil, err
 	}
 
-	usr := new(User)
-	resp, err := s.client.Do(req, usr)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, resp, err
 	}
-	return usr, resp, nil
+	defer resp.Body.Close()
+
+	user, err := decodeUser(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	return user, resp, nil
+}
+
+func decodeUser(r io.Reader) (*User, error) {
+	u := new(User)
+	err := jsonapi.DecodeOne(r, u)
+	return u, err
 }
 
 // List returns a list of Users. Optional parameters can be specified to filter
@@ -51,21 +69,33 @@ func (s *UserService) List(opts ...URLOption) ([]*User, *Response, error) {
 		return nil, nil, err
 	}
 
-	userType := reflect.TypeOf(&User{})
-	data, resp, err := s.client.DoMany(req, userType)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, resp, err
+	}
+	defer resp.Body.Close()
+
+	users, o, err := decodeUserList(resp.Body)
+	if err != nil {
+		return nil, resp, err
+	}
+	resp.Offset = o
+
+	return users, resp, nil
+}
+
+func decodeUserList(r io.Reader) ([]*User, PageOffset, error) {
+	data, o, err := jsonapi.DecodeMany(r, reflect.TypeOf(&User{}))
+	if err != nil {
+		return nil, PageOffset{}, err
 	}
 
 	users := make([]*User, 0, len(data))
 	for _, d := range data {
-		a, ok := d.(*User)
-		if !ok {
-			// This should never happen.
-			return nil, resp, fmt.Errorf("expected user type %v but it was %T", userType, a)
+		if a, ok := d.(*User); ok {
+			users = append(users, a)
 		}
-		users = append(users, a)
 	}
 
-	return users, resp, nil
+	return users, makePageOffset(o), nil
 }
