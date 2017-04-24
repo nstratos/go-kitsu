@@ -248,6 +248,11 @@ func newResponse(r *http.Response) *Response {
 	return &Response{Response: r}
 }
 
+// Do sends an API request and returns the API response. If an API error has
+// occurred both the response and the error will be returned in case the caller
+// wishes to inspect the response further.
+//
+// The caller of is responsibile for closing the response body.
 func (c *Client) Do(req *http.Request) (*Response, error) {
 
 	dumpRequest(req, true)
@@ -261,7 +266,7 @@ func (c *Client) Do(req *http.Request) (*Response, error) {
 	return newResponse(resp), checkResponse(resp)
 }
 
-// Do sends an API request and returns the API response for resources that
+// DoOne sends an API request and returns the API response for resources that
 // return one result. If an API error has occurred both the response and the
 // error will be returned in case the caller wishes to inspect the response
 // further. If v is passed as an argument, then the API response is JSON
