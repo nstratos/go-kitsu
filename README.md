@@ -36,21 +36,21 @@ A [x] means that the method works. The progress bar on working methods, shows
 roughly the percentage of attributes and relationships implemented for that
 resource.
 
-[x] List Anime ![Progress](http://progressed.io/bar/65)
-[x] Show Anime ![Progress](http://progressed.io/bar/65)
-[ ] List Manga
-[ ] Show Manga
-[ ] List Drama
-[ ] Show Drama
-[x] List Users ![Progress](http://progressed.io/bar/75)
-[ ] Create User
-[x] Show User ![Progress](http://progressed.io/bar/75)
-[ ] Update User
-[ ] List LibraryEntries
-[ ] Create LibraryEntry ![Progress](http://progressed.io/bar/50)
-[x] Show LibraryEntry ![Progress](http://progressed.io/bar/80)
-[ ] Update LibraryEntry
-[ ] Delete LibraryEntry
+- [x] List Anime ![Progress](http://progressed.io/bar/65)
+- [x] Show Anime ![Progress](http://progressed.io/bar/65)
+- [ ] List Manga
+- [ ] Show Manga
+- [ ] List Drama
+- [ ] Show Drama
+- [x] List Users ![Progress](http://progressed.io/bar/75)
+- [ ] Create User
+- [x] Show User ![Progress](http://progressed.io/bar/75)
+- [ ] Update User
+- [ ] List LibraryEntries
+- [ ] Create LibraryEntry ![Progress](http://progressed.io/bar/50)
+- [x] Show LibraryEntry ![Progress](http://progressed.io/bar/80)
+- [ ] Update LibraryEntry
+- [ ] Delete LibraryEntry
 
 License
 -------
