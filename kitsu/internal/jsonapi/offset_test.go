@@ -1,4 +1,4 @@
-package kitsu
+package jsonapi
 
 import (
 	"reflect"
@@ -18,9 +18,21 @@ func Test_parseOffset(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseOffset returned err: %v", err)
 	}
-	got, want := o, &PageOffset{First: 50, Prev: 0, Next: 100, Last: 500}
+	got, want := o, Offset{First: 50, Prev: 0, Next: 100, Last: 500}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("parseOffset = %#v, want %#v", got, want)
+	}
+}
+
+func Test_parseOffset_structLink(t *testing.T) {
+	structLinks := []jsonapi.Links{
+		{"first": struct{}{}},
+	}
+	for _, link := range structLinks {
+		_, err := parseOffset(link)
+		if err == nil {
+			t.Errorf("parseOffset with struct links expected to return err")
+		}
 	}
 }
 
@@ -37,7 +49,7 @@ func Test_parseOffset_pageNumberAndSize(t *testing.T) {
 	}
 	// The Kitsu API uses offset & limit instead of number & size so we expect
 	// nothing.
-	got, want := o, &PageOffset{}
+	got, want := o, Offset{}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("parseOffset = %#v, want %#v", got, want)
 	}
