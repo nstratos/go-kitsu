@@ -150,7 +150,7 @@ func TestDecode_manyWithBadLinks(t *testing.T) {
 // Decoding to a type that is not a pointer to struct or a pointer to slice of
 // pointers to structs should return an error.
 func TestDecode_toBadType(t *testing.T) {
-	in := `{"data":[]}`
+	in := `{"data":[{"type":"anime","id":"1"},{"type":"anime","id":"2"}]}`
 
 	r := strings.NewReader(in)
 	var anime []*Anime

@@ -48,8 +48,16 @@ func Encode(w io.Writer, v interface{}) (err error) {
 	}
 }
 
-func Decode(r io.Reader, ptr interface{}) (Offset, error) {
+func Decode(r io.Reader, ptr interface{}) (offset Offset, err error) {
 	const errFormat = "cannot decode to %T, need pointer to struct or pointer to slice"
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(runtime.Error); ok {
+				panic(r)
+			}
+			err = fmt.Errorf(errFormat+": %v", ptr, r)
+		}
+	}()
 	if reflect.TypeOf(ptr).Kind() != reflect.Ptr {
 		return Offset{}, fmt.Errorf(errFormat, ptr)
 	}
@@ -60,9 +68,9 @@ func Decode(r io.Reader, ptr interface{}) (Offset, error) {
 	case reflect.Struct:
 		return Offset{}, jsonapi.UnmarshalPayload(r, ptr)
 	case reflect.Slice:
-		data, links, err := jsonapi.UnmarshalManyPayloadWithLinks(r, v.Type().Elem())
-		if err != nil {
-			return Offset{}, err
+		data, links, uerr := jsonapi.UnmarshalManyPayloadWithLinks(r, v.Type().Elem())
+		if uerr != nil {
+			return Offset{}, uerr
 		}
 		for _, d := range data {
 			v.Set(reflect.Append(v, reflect.ValueOf(d)))
