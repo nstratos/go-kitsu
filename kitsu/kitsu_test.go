@@ -89,16 +89,6 @@ func TestClient_NewRequest(t *testing.T) {
 
 }
 
-func TestClient_NewRequest_encodeUnknownType(t *testing.T) {
-	c := NewClient(nil)
-
-	body := &struct{ Foo string }{Foo: "bar"}
-	_, err := c.NewRequest("GET", "/foo", body)
-	if err == nil {
-		t.Errorf("NewRequest(%#v) expected to return err", body)
-	}
-}
-
 func TestClient_NewRequest_encode(t *testing.T) {
 	var tests = []struct {
 		in  interface{}
@@ -141,22 +131,16 @@ func TestClient_NewRequest_badURL(t *testing.T) {
 	}
 }
 
-//func TestClient_NewRequest_badBody(t *testing.T) {
-//	c := NewClient(nil)
-//
-//	type Foo struct {
-//		Bar map[interface{}]interface{}
-//	}
-//	inBody := &Foo{}
-//	_, err := c.NewRequest("GET", "/", inBody)
-//
-//	if err == nil {
-//		t.Errorf("NewRequest(%#v) should return err", inBody)
-//	}
-//	if err, ok := err.(*json.UnsupportedTypeError); !ok {
-//		t.Errorf("Expected JSON Unsupported type error, got %#v.", err)
-//	}
-//}
+func TestClient_NewRequest_badBody(t *testing.T) {
+	c := NewClient(nil)
+
+	inBody := int(1)
+	_, err := c.NewRequest("GET", "/", inBody)
+
+	if err == nil {
+		t.Errorf("NewRequest(%#v) should return err", inBody)
+	}
+}
 
 func TestClient_NewRequest_emptyBody(t *testing.T) {
 	c := NewClient(nil)
@@ -186,11 +170,55 @@ func TestClient_Do(t *testing.T) {
 
 	req, _ := client.NewRequest("GET", "/", nil)
 	got := new(foo)
-	_, _ = client.DoOne(req, got)
+	_, err := client.Do(req, got)
+	if err != nil {
+		t.Fatalf("Do(%#v) returned err: %v", got, err)
+	}
 
 	want := &foo{Bar: "foobar"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Response body = %v, want %v", got, want)
+	}
+}
+
+func TestClient_Do_badDecodeType(t *testing.T) {
+	setup()
+	defer teardown()
+
+	type foo struct {
+		Bar string `jsonapi:"primary,not_foo"`
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if m := "GET"; m != r.Method {
+			t.Errorf("Request method = %v, want %v", r.Method, m)
+		}
+		fmt.Fprint(w, `{"data":{"id":"foobar","type":"foo"}}`)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	got := new(foo)
+	_, err := client.Do(req, got)
+	if err == nil {
+		t.Fatalf("Do with bad decode type expected to return err")
+	}
+}
+
+func TestClient_Do_noDecode(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if m := "GET"; m != r.Method {
+			t.Errorf("Request method = %v, want %v", r.Method, m)
+		}
+		fmt.Fprint(w, `{}`)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	_, err := client.Do(req, nil)
+	if err != nil {
+		t.Fatalf("Do(%v) returned err: %v", nil, err)
 	}
 }
 
@@ -203,7 +231,7 @@ func TestClient_Do_httpError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	_, err := client.DoOne(req, nil)
+	_, err := client.Do(req, nil)
 	if err == nil {
 		t.Error("Expected HTTP 400 error.")
 	}
@@ -218,7 +246,7 @@ func TestClient_Do_redirectLoop(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	_, err := client.DoOne(req, nil)
+	_, err := client.Do(req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")

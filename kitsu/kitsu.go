@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -187,7 +186,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
-		if err := encode(buf, body); err != nil {
+		if err := jsonapi.Encode(buf, body); err != nil {
 			return nil, err
 		}
 	}
@@ -205,17 +204,6 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	req.Header.Set("Accept", defaultMediaType)
 
 	return req, nil
-}
-
-func encode(w io.Writer, v interface{}) error {
-	switch v := v.(type) {
-	default:
-		return fmt.Errorf("cannot encode unknown type %T", v)
-	case *Anime, *User, *LibraryEntry:
-		return jsonapi.EncodeOne(w, v)
-	case []*Anime, []*User, []*LibraryEntry:
-		return jsonapi.EncodeMany(w, v)
-	}
 }
 
 // Response is a Kitsu API response. It wraps the standard http.Response
@@ -252,68 +240,54 @@ func newResponse(r *http.Response) *Response {
 // occurred both the response and the error will be returned in case the caller
 // wishes to inspect the response further.
 //
-// The caller of is responsibile for closing the response body.
-func (c *Client) Do(req *http.Request) (*Response, error) {
+// If v is passed as an argument, then the API response (assuming it is a valid
+// JSON API document) is decoded and stored to v.
+//
+// Decoding requires v to be a pointer to a struct. For example:
+//
+//   a := new(Anime)
+//   c.client.Do(req, a)
+//
+// Alternatively you may pass the address of a slice of pointers to structs:
+//
+//   var anime []*Anime
+//   c.client.Do(req, &anime)
+//
+// Do closes the response body on return.
+func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 
-	dumpRequest(req, true)
-
-	resp, err := c.client.Do(req)
-	dumpResponse(resp, true)
-	if err != nil {
-		return nil, err
-	}
-
-	return newResponse(resp), checkResponse(resp)
-}
-
-// DoOne sends an API request and returns the API response for resources that
-// return one result. If an API error has occurred both the response and the
-// error will be returned in case the caller wishes to inspect the response
-// further. If v is passed as an argument, then the API response is JSON
-// decoded and stored to v.
-func (c *Client) DoOne(req *http.Request, v interface{}) (*Response, error) {
+	// Do HTTP request.
+	dumpRequest(req, true) // only when built with -tags=debug
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
+	dumpResponse(resp, true) // only when built with -tags=debug
 
-	err = checkResponse(resp)
-	if err != nil {
+	// Check response for errors.
+	if err := checkResponse(resp); err != nil {
+		// Despite the error, the response is still returned in case the caller
+		// wishes to inspect it further.
 		return newResponse(resp), err
 	}
 
-	if v != nil {
-		err = jsonapi.DecodeOne(resp.Body, v)
+	// No v passed, nothing to do.
+	if v == nil {
+		return newResponse(resp), nil
 	}
-	return newResponse(resp), err
-}
 
-// DoMany sends an API request and returns the API response for resources that
-// return many results. If an API error has occurred both the response and the
-// error will be returned in case the caller wishes to inspect the response
-// further. The type t of the results has to be provided. The response contains
-// offset values to aid with pagination.
-func (c *Client) DoMany(req *http.Request, t reflect.Type) ([]interface{}, *Response, error) {
-	resp, err := c.client.Do(req)
+	// Decode response body to v.
+	o, err := jsonapi.Decode(resp.Body, v)
 	if err != nil {
-		return nil, nil, err
+		return newResponse(resp), err
 	}
-
-	defer resp.Body.Close()
-
-	err = checkResponse(resp)
-	if err != nil {
-		return nil, newResponse(resp), err
-	}
-
-	v, o, err := jsonapi.DecodeMany(resp.Body, t)
 	response := &Response{
 		Response: resp,
 		Offset:   makePageOffset(o),
 	}
-	return v, response, err
+
+	return response, nil
 }
 
 // ErrorResponse reports one or more errors caused by an API request.

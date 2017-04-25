@@ -2,10 +2,6 @@ package kitsu
 
 import (
 	"fmt"
-	"io"
-	"reflect"
-
-	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 // The possible anime show types. They are convenient for making comparisons
@@ -103,16 +99,12 @@ func (s *AnimeService) Show(animeID string, opts ...URLOption) (*Anime, *Respons
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	a := new(Anime)
+	resp, err := s.client.Do(req, a)
 	if err != nil {
 		return nil, resp, err
 	}
-	defer resp.Body.Close()
 
-	a, err := decodeAnime(resp.Body)
-	if err != nil {
-		return nil, nil, err
-	}
 	return a, resp, nil
 }
 
@@ -126,39 +118,11 @@ func (s *AnimeService) List(opts ...URLOption) ([]*Anime, *Response, error) {
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	var anime []*Anime
+	resp, err := s.client.Do(req, &anime)
 	if err != nil {
 		return nil, resp, err
 	}
-	defer resp.Body.Close()
-
-	anime, o, err := decodeAnimeList(resp.Body)
-	if err != nil {
-		return nil, resp, err
-	}
-	resp.Offset = o
 
 	return anime, resp, nil
-}
-
-func decodeAnime(r io.Reader) (*Anime, error) {
-	a := new(Anime)
-	err := jsonapi.DecodeOne(r, a)
-	return a, err
-}
-
-func decodeAnimeList(r io.Reader) ([]*Anime, PageOffset, error) {
-	data, o, err := jsonapi.DecodeMany(r, reflect.TypeOf(&Anime{}))
-	if err != nil {
-		return nil, PageOffset{}, err
-	}
-
-	anime := make([]*Anime, 0, len(data))
-	for _, d := range data {
-		if a, ok := d.(*Anime); ok {
-			anime = append(anime, a)
-		}
-	}
-
-	return anime, makePageOffset(o), nil
 }

@@ -2,10 +2,6 @@ package kitsu
 
 import (
 	"fmt"
-	"io"
-	"reflect"
-
-	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 // The possible library entry statuses. They are convenient when creating a
@@ -54,23 +50,13 @@ func (s *LibraryService) Show(libraryEntryID string, opts ...URLOption) (*Librar
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, resp, err
-	}
-	defer resp.Body.Close()
-
-	e, err := decodeLibraryEntry(resp.Body)
-	if err != nil {
-		return nil, resp, err
-	}
-	return e, resp, nil
-}
-
-func decodeLibraryEntry(r io.Reader) (*LibraryEntry, error) {
 	e := new(LibraryEntry)
-	err := jsonapi.DecodeOne(r, e)
-	return e, err
+	resp, err := s.client.Do(req, e)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return e, resp, nil
 }
 
 // Create creates a library entry. This method needs authentication.
@@ -82,33 +68,11 @@ func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) ([]*LibraryE
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	var entries []*LibraryEntry
+	resp, err := s.client.Do(req, entries)
 	if err != nil {
 		return nil, resp, err
 	}
-	defer resp.Body.Close()
-
-	entries, o, err := decodeLibraryEntryList(resp.Body)
-	if err != nil {
-		return nil, resp, err
-	}
-	resp.Offset = o
 
 	return entries, resp, nil
-}
-
-func decodeLibraryEntryList(r io.Reader) ([]*LibraryEntry, PageOffset, error) {
-	data, o, err := jsonapi.DecodeMany(r, reflect.TypeOf(&LibraryEntry{}))
-	if err != nil {
-		return nil, PageOffset{}, err
-	}
-
-	entries := make([]*LibraryEntry, 0, len(data))
-	for _, d := range data {
-		if a, ok := d.(*LibraryEntry); ok {
-			entries = append(entries, a)
-		}
-	}
-
-	return entries, makePageOffset(o), nil
 }

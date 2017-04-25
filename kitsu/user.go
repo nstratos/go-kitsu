@@ -2,10 +2,6 @@ package kitsu
 
 import (
 	"fmt"
-	"io"
-	"reflect"
-
-	"github.com/nstratos/go-kitsu/kitsu/internal/jsonapi"
 )
 
 // UserService handles communication with the user related methods of the
@@ -41,23 +37,13 @@ func (s *UserService) Show(userID string, opts ...URLOption) (*User, *Response, 
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	user := new(User)
+	resp, err := s.client.Do(req, user)
 	if err != nil {
 		return nil, resp, err
 	}
-	defer resp.Body.Close()
 
-	user, err := decodeUser(resp.Body)
-	if err != nil {
-		return nil, nil, err
-	}
 	return user, resp, nil
-}
-
-func decodeUser(r io.Reader) (*User, error) {
-	u := new(User)
-	err := jsonapi.DecodeOne(r, u)
-	return u, err
 }
 
 // List returns a list of Users. Optional parameters can be specified to filter
@@ -70,33 +56,11 @@ func (s *UserService) List(opts ...URLOption) ([]*User, *Response, error) {
 		return nil, nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	var users []*User
+	resp, err := s.client.Do(req, &users)
 	if err != nil {
 		return nil, resp, err
 	}
-	defer resp.Body.Close()
-
-	users, o, err := decodeUserList(resp.Body)
-	if err != nil {
-		return nil, resp, err
-	}
-	resp.Offset = o
 
 	return users, resp, nil
-}
-
-func decodeUserList(r io.Reader) ([]*User, PageOffset, error) {
-	data, o, err := jsonapi.DecodeMany(r, reflect.TypeOf(&User{}))
-	if err != nil {
-		return nil, PageOffset{}, err
-	}
-
-	users := make([]*User, 0, len(data))
-	for _, d := range data {
-		if a, ok := d.(*User); ok {
-			users = append(users, a)
-		}
-	}
-
-	return users, makePageOffset(o), nil
 }
