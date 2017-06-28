@@ -39,6 +39,68 @@ func TestAnimeService_Show(t *testing.T) {
 	}
 }
 
+func TestAnimeService_Show_decodeAttributes(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/"+defaultAPIVersion+"anime/7442", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testHeader(t, r, "Accept", defaultMediaType)
+		fmt.Fprintf(w, `{
+			"data":{
+				"id":"7442",
+				"type":"anime",
+				"attributes":{
+					"slug": "attack-on-titan",
+					"synopsis": "Several hundred years ago, humans were nearly exterminated by titans...",
+					"coverImageTopOffset": 263,
+					"canonical_title": "Attack on Titan",
+					"averageRating": 4.26984658306698,
+					"startDate": "2013-04-07",
+					"endDate": "2013-09-28",
+					"coverImage": {
+						"original": "https://static.hummingbird.me/anime/7442/cover/$1.png"
+					},
+					"episodeCount": 25,
+					"episodeLength": 24,
+					"showType": "TV",
+					"youtubeVideoId": "n4Nj6Y_SNYI",
+					"ageRating": "R",
+					"ageRatingGuide": "Violence, Profanity"
+				}
+			}
+		}`)
+	})
+
+	got, _, err := client.Anime.Show("7442")
+	if err != nil {
+		t.Fatalf("Anime.Show returned error: %v", err)
+	}
+
+	want := &Anime{
+		ID:                  "7442",
+		Slug:                "attack-on-titan",
+		Synopsis:            "Several hundred years ago, humans were nearly exterminated by titans...",
+		CoverImageTopOffset: 263,
+		CanonicalTitle:      "Attack on Titan",
+		AverageRating:       4.26984658306698,
+		StartDate:           "2013-04-07",
+		EndDate:             "2013-09-28",
+		CoverImage: map[string]interface{}{
+			"original": "https://static.hummingbird.me/anime/7442/cover/$1.png",
+		},
+		EpisodeCount:   25,
+		EpisodeLength:  24,
+		ShowType:       "TV",
+		YoutubeVideoID: "n4Nj6Y_SNYI",
+		AgeRating:      "R",
+		AgeRatingGuide: "Violence, Profanity",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Anime.Show decode attributes mismatch\nhave: %#+v\nwant: %#+v", got, want)
+	}
+}
+
 func TestAnimeService_Show_notFound(t *testing.T) {
 	setup()
 	defer teardown()

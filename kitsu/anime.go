@@ -23,10 +23,29 @@ const (
 type AnimeService service
 
 // Anime represents a Kitsu anime.
+//
+// Additional filters: text, season, streamers
 type Anime struct {
-	ID       string     `jsonapi:"primary,anime"`
-	Slug     string     `jsonapi:"attr,slug,omitempty"`     // Unique slug used for page URLs, e.g. attack-on-titan.
-	ShowType string     `jsonapi:"attr,showType,omitempty"` // Show format of the anime. Can be compared with AnimeType constants.
+	ID                  string  `jsonapi:"primary,anime"`
+	Slug                string  `jsonapi:"attr,slug,omitempty"`                // Unique slug used for page URLs, e.g. attack-on-titan.
+	Synopsis            string  `jsonapi:"attr,synopsis,omitempty"`            // Synopsis of the anime, e.g. Several hundred years ago, humans were...
+	CoverImageTopOffset int     `jsonapi:"attr,coverImageTopOffset,omitempty"` // e.g. 263
+	CanonicalTitle      string  `jsonapi:"attr,canonical_title,omitempty"`     // Canonical title for the anime, e.g. Attack on Titan
+	AverageRating       float64 `jsonapi:"attr,averageRating,omitempty"`       // The average of all user ratings for the anime, e.g. 4.26984658306698
+	StartDate           string  `jsonapi:"attr,startDate,omitempty"`           // Date the anime started airing/was released, e.g. 2013-04-07
+	EndDate             string  `jsonapi:"attr,endDate,omitempty"`             // Date the anime finished airing, e.g. 2013-09-28
+	//CoverImage          struct {
+	//	Original string `json:"original"`
+	//} `jsonapi:"attr,coverImage,omitempty"`
+	// TODO: check encoding of map[string]interface{}
+	CoverImage     map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
+	EpisodeCount   int                    `jsonapi:"attr,episodeCount,omitempty"`   // How many episodes the anime has, e.g. 25
+	EpisodeLength  int                    `jsonapi:"attr,episodeLength,omitempty"`  // How many minutes long each episode is, e.g. 24
+	ShowType       string                 `jsonapi:"attr,showType,omitempty"`       // Show format of the anime. Can be compared with AnimeType constants.
+	YoutubeVideoID string                 `jsonapi:"attr,youtubeVideoId,omitempty"` // YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
+	AgeRating      string                 `jsonapi:"attr,ageRating,omitempty"`      // Age rating for the anime, e.g. R
+	AgeRatingGuide string                 `jsonapi:"attr,ageRatingGuide,omitempty"` // Description of the age rating, e.g. Violence, Profanity
+
 	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
 	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
 }
