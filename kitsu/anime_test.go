@@ -54,10 +54,31 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 					"slug": "attack-on-titan",
 					"synopsis": "Several hundred years ago, humans were nearly exterminated by titans...",
 					"coverImageTopOffset": 263,
+					"titles": {
+						"en": "Attack on Titan",
+						"en_jp": "Shingeki no Kyojin",
+						"ja_jp": "進撃の巨人"
+					},
 					"canonical_title": "Attack on Titan",
+					"abbreviatedTitles": [ "AoT", "AT" ],
 					"averageRating": 4.26984658306698,
+					"ratingFrequencies": {
+						"0.5": "114",
+						"1.0": "279",
+						"1.5": "146",
+						"2.0": "359",
+						"2.5": "763",
+						"3.0": "2331",
+						"3.5": "3034",
+						"4.0": "5619",
+						"4.5": "5951",
+						"5.0": "12878"
+					},
 					"startDate": "2013-04-07",
 					"endDate": "2013-09-28",
+					"posterImage": {
+						"original": "https://static.hummingbird.me/anime/7442/poster/$1.png"
+					},
 					"coverImage": {
 						"original": "https://static.hummingbird.me/anime/7442/cover/$1.png"
 					},
@@ -82,10 +103,31 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 		Slug:                "attack-on-titan",
 		Synopsis:            "Several hundred years ago, humans were nearly exterminated by titans...",
 		CoverImageTopOffset: 263,
-		CanonicalTitle:      "Attack on Titan",
-		AverageRating:       4.26984658306698,
-		StartDate:           "2013-04-07",
-		EndDate:             "2013-09-28",
+		Titles: map[string]interface{}{
+			"en":    "Attack on Titan",
+			"en_jp": "Shingeki no Kyojin",
+			"ja_jp": "進撃の巨人",
+		},
+		CanonicalTitle:    "Attack on Titan",
+		AbbreviatedTitles: []string{"AoT", "AT"},
+		AverageRating:     4.26984658306698,
+		RatingFrequencies: map[string]interface{}{
+			"0.5": "114",
+			"1.0": "279",
+			"1.5": "146",
+			"2.0": "359",
+			"2.5": "763",
+			"3.0": "2331",
+			"3.5": "3034",
+			"4.0": "5619",
+			"4.5": "5951",
+			"5.0": "12878",
+		},
+		StartDate: "2013-04-07",
+		EndDate:   "2013-09-28",
+		PosterImage: map[string]interface{}{
+			"original": "https://static.hummingbird.me/anime/7442/poster/$1.png",
+		},
 		CoverImage: map[string]interface{}{
 			"original": "https://static.hummingbird.me/anime/7442/cover/$1.png",
 		},

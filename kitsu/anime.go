@@ -34,17 +34,42 @@ type Anime struct {
 	AverageRating       float64 `jsonapi:"attr,averageRating,omitempty"`       // The average of all user ratings for the anime, e.g. 4.26984658306698
 	StartDate           string  `jsonapi:"attr,startDate,omitempty"`           // Date the anime started airing/was released, e.g. 2013-04-07
 	EndDate             string  `jsonapi:"attr,endDate,omitempty"`             // Date the anime finished airing, e.g. 2013-09-28
-	//CoverImage          struct {
-	//	Original string `json:"original"`
-	//} `jsonapi:"attr,coverImage,omitempty"`
-	// TODO: check encoding of map[string]interface{}
-	CoverImage     map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
-	EpisodeCount   int                    `jsonapi:"attr,episodeCount,omitempty"`   // How many episodes the anime has, e.g. 25
-	EpisodeLength  int                    `jsonapi:"attr,episodeLength,omitempty"`  // How many minutes long each episode is, e.g. 24
-	ShowType       string                 `jsonapi:"attr,showType,omitempty"`       // Show format of the anime. Can be compared with AnimeType constants.
-	YoutubeVideoID string                 `jsonapi:"attr,youtubeVideoId,omitempty"` // YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
-	AgeRating      string                 `jsonapi:"attr,ageRating,omitempty"`      // Age rating for the anime, e.g. R
-	AgeRatingGuide string                 `jsonapi:"attr,ageRatingGuide,omitempty"` // Description of the age rating, e.g. Violence, Profanity
+	EpisodeCount        int     `jsonapi:"attr,episodeCount,omitempty"`        // How many episodes the anime has, e.g. 25
+	EpisodeLength       int     `jsonapi:"attr,episodeLength,omitempty"`       // How many minutes long each episode is, e.g. 24
+	ShowType            string  `jsonapi:"attr,showType,omitempty"`            // Show format of the anime. Can be compared with AnimeType constants.
+	YoutubeVideoID      string  `jsonapi:"attr,youtubeVideoId,omitempty"`      // YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
+	AgeRating           string  `jsonapi:"attr,ageRating,omitempty"`           // Age rating for the anime, e.g. R
+	AgeRatingGuide      string  `jsonapi:"attr,ageRatingGuide,omitempty"`      // Description of the age rating, e.g. Violence, Profanity
+
+	// The titles of the anime which include:
+	// English title of the anime, e.g. "en": "Attack on Titan"
+	// The romaji title of the anime, e.g. "en_jp": "Shingeki no Kyojin"
+	// Japanese title of the anime, e.g.  "ja_jp": "進撃の巨人"
+	Titles map[string]interface{} `jsonapi:"attr,titles,omitempty"`
+
+	// Shortened nicknames for the anime.
+	AbbreviatedTitles []string `jsonapi:"attr,abbreviatedTitles,omitempty"`
+
+	// The URL template for the poster, e.g. "original": "https://static.hummingbird.me/anime/7442/poster/$1.png"
+	PosterImage map[string]interface{} `jsonapi:"attr,posterImage,omitempty"`
+
+	// The URL template for the cover, e.g. "original": "https://static.hummingbird.me/anime/7442/cover/$1.png"
+	CoverImage map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
+
+	// How many times each rating has been given to the anime, e.g.
+	// "0.5": "114",
+	// "1.0": "279",
+	// "1.5": "146",
+	// "2.0": "359",
+	// "2.5": "763",
+	// "3.0": "2331",
+	// "3.5": "3034",
+	// "4.0": "5619",
+	// "4.5": "5951",
+	// "5.0": "12878"
+	RatingFrequencies map[string]interface{} `jsonapi:"attr,ratingFrequencies,omitempty"`
+
+	// Relationships.
 
 	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
 	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
