@@ -29,16 +29,13 @@ type LibraryEntry struct {
 	Private        bool   `jsonapi:"attr,private,omitempty"`        // Whether this entry is hidden from the public, e.g. false.
 	Rating         string `jsonapi:"attr,rating,omitempty"`         // User rating out of 5.0.
 	UpdatedAt      string `jsonapi:"attr,updatedAt,omitempty"`      // When the entry was last updated, e.g. 2016-11-12T03:35:00.064Z.
-	User           *User  `jsonapi:"relation,user,omitempty"`
-	Anime          *Anime `jsonapi:"relation,anime,omitempty"`
-	//Media          *Media `jsonapi:"relation,media"`
+
+	// Relationships.
+
+	User  *User       `jsonapi:"relation,user,omitempty"`
+	Anime *Anime      `jsonapi:"relation,anime,omitempty"`
 	Media interface{} `jsonapi:"relation,media,omitempty"`
 }
-
-//type Media struct {
-//	ID   string `jsonapi:"primary,media"`
-//	Type string `jsonapi:"attr,type"`
-//}
 
 // Show returns details for a specific LibraryEntry by providing a unique identifier
 // of the library entry, e.g. 5269457.
@@ -57,6 +54,25 @@ func (s *LibraryService) Show(libraryEntryID string, opts ...URLOption) (*Librar
 	}
 
 	return e, resp, nil
+}
+
+// List returns a list of Library entries. Optional parameters can be specified
+// to filter the search results and control pagination, sorting etc.
+func (s *LibraryService) List(opts ...URLOption) ([]*LibraryEntry, *Response, error) {
+	u := defaultAPIVersion + "library-entries"
+
+	req, err := s.client.NewRequest("GET", u, nil, opts...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var entries []*LibraryEntry
+	resp, err := s.client.Do(req, &entries)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return entries, resp, nil
 }
 
 // Create creates a library entry. This method needs authentication.
