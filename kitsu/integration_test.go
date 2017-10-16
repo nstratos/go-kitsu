@@ -54,7 +54,7 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	// Check that all anime include their castings.
 	for _, a := range list {
 		if a.Castings == nil {
-			t.Fatalf("client.Anime.List expected to include castings. %d %s castings is nil", a.ID, a.Slug)
+			t.Fatalf("client.Anime.List expected to include castings. %s %s castings is nil", a.ID, a.Slug)
 		}
 	}
 
@@ -74,6 +74,6 @@ func TestAnimeServiceIntegration(t *testing.T) {
 
 	// Check that the anime includes castings.
 	if bebop.Castings == nil {
-		t.Fatalf("client.Anime.Show expected to include castings. %d %s castings is nil", bebop.ID, bebop.Slug)
+		t.Fatalf("client.Anime.Show expected to include castings. %s %s castings is nil", bebop.ID, bebop.Slug)
 	}
 }
