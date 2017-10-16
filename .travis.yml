@@ -4,6 +4,7 @@ sudo: false
 go:
   - 1.7.x
   - 1.8.x
+  - 1.9.x
 
 before_install:
   - go get github.com/mattn/goveralls
@@ -16,5 +17,5 @@ script:
   - diff -u <(echo -n) <(gofmt -d .)
   - go tool vet .
   - go vet $(go list ./... | grep -v "vendor")
-  - go test -v -race $(go list ./... | grep -v "vendor")
+  - go test -v -short -race $(go list ./... | grep -v "vendor")
   - goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN
