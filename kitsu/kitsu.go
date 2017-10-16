@@ -186,7 +186,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
-		if err := jsonapi.Encode(buf, body); err != nil {
+		if err = jsonapi.Encode(buf, body); err != nil {
 			return nil, err
 		}
 	}
@@ -266,7 +266,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	dumpResponse(resp, true) // only when built with -tags=debug
 
 	// Check response for errors.
-	if err := checkResponse(resp); err != nil {
+	if err = checkResponse(resp); err != nil {
 		// Despite the error, the response is still returned in case the caller
 		// wishes to inspect it further.
 		return newResponse(resp), err
