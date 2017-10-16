@@ -174,11 +174,9 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...URL
 	}
 
 	v := rel.Query()
-	if opts != nil {
-		for _, opt := range opts {
-			if opt != nil { // Avoid panic in case the user passes a nil option.
-				opt(&v)
-			}
+	for _, opt := range opts {
+		if opt != nil { // Avoid panic in case the user passes a nil option.
+			opt(&v)
 		}
 	}
 	rel.RawQuery = v.Encode()
