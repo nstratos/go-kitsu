@@ -93,7 +93,7 @@ type User struct {
 	//
 	// "original": "https://media.kitsu.io/users/avatars/1/original.jpg?1434087646"
 	//
-	// It may also contain a meta object with additional dimentions objects for
+	// It may also contain a meta object with additional dimensions objects for
 	// each previous Avatar type.
 	Avatar     map[string]interface{} `jsonapi:"attr,avatar,omitempty"`
 	CoverImage map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
@@ -104,7 +104,7 @@ type User struct {
 	// Possible valued described by UserTheme constants.
 	Theme string `jsonapi:"attr,theme,omitempty"`
 
-	FacebookId string `jsonapi:"attr,facebookId,omitempty"`
+	FacebookID string `jsonapi:"attr,facebookId,omitempty"`
 
 	// --- Relationships ---
 
