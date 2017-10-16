@@ -1,5 +1,3 @@
-// +build integration
-
 package kitsu_test
 
 import (
@@ -9,8 +7,7 @@ import (
 )
 
 const (
-	results         = 5
-	firstResultSlug = "cowboy-bebop"
+	results = 5
 )
 
 var client *kitsu.Client
@@ -21,6 +18,9 @@ func setup(t *testing.T) {
 }
 
 func TestAnimeServiceIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 	setup(t)
 
 	// Get anime list with options to include specific limit and includes.
@@ -67,6 +67,7 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	}
 
 	// First result in kitsu database is Cowboy Bebop.
+	const firstResultSlug = "cowboy-bebop"
 	if bebop.Slug != firstResultSlug {
 		t.Fatalf("client.Anime.Show first result slug = %s, want %s", bebop.Slug, firstResultSlug)
 	}
