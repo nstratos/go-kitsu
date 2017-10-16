@@ -18,7 +18,7 @@ func TestUserService_Show(t *testing.T) {
 		testFormValues(t, r, values{
 			"filter[name]": "chitanda",
 		})
-		fmt.Fprintf(w, `{"data":{"id":"29745","type":"users","attributes":{"name":"chitanda","lifeSpentOnAnime":550}}}`)
+		fmt.Fprintf(w, `{"data":{"id":"29745","type":"users","attributes":{"name":"chitanda","pastNames":["foo","bar"]}}}`)
 	})
 
 	got, _, err := client.User.Show("29745", Filter("name", "chitanda"))
@@ -26,7 +26,7 @@ func TestUserService_Show(t *testing.T) {
 		t.Errorf("User.Show returned error: %v", err)
 	}
 
-	want := &User{ID: "29745", Name: "chitanda", LifeSpent: 550}
+	want := &User{ID: "29745", Name: "chitanda", PastNames: []string{"foo", "bar"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("User.Show user mismatch\nhave: %#+v\nwant: %#+v", got, want)
 	}
