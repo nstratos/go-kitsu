@@ -5,7 +5,7 @@ go-kitsu is a Go client library for accessing the [kitsu.io API](http://docs.kit
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/nstratos/go-kitsu/kitsu?status.svg)](https://godoc.org/github.com/nstratos/go-kitsu/kitsu)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nstratos/go-kitsu)](https://goreportcard.com/report/github.com/nstratos/go-kitsu)
-[![Coverage Status](https://coveralls.io/repos/github/nstratos/go-kitsu/badge.svg?branch=jsonapi)](https://coveralls.io/github/nstratos/go-kitsu?branch=jsonapi)
+[![Coverage Status](https://coveralls.io/repos/github/nstratos/go-kitsu/badge.svg)](https://coveralls.io/github/nstratos/go-kitsu)
 [![Build Status](https://travis-ci.org/nstratos/go-kitsu.svg?branch=master)](https://travis-ci.org/nstratos/go-kitsu)
 
 ## Installation
@@ -113,10 +113,10 @@ welcome.
 
 ## Stability
 
-The kitsu API does not currently provide endpoint versioning. The only
+The Kitsu API does not currently provide endpoint versioning. The only
 available endpoint is the appropriately named "edge" endpoint
 (https://kitsu.io/api/edge/) which "offers no guarantees: anything could change
-at any time" (to quote the kitsu API docs).
+at any time" (to quote the Kitsu API docs).
 
 As a result, this package provides as many guarantees as the edge endpoint.
 Nevertheless there is effort to keep the package as stable as possible through
