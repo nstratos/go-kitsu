@@ -8,6 +8,8 @@ import (
 	"github.com/nstratos/jsonapi"
 )
 
+// Offset represents the pagination offset returned in the API response when
+// there's a list of resources.
 type Offset struct {
 	First, Last, Prev, Next int
 }

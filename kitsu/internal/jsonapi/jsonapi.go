@@ -13,6 +13,8 @@ func isZeroOfUnderlyingType(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
+// Encode returns the JSON API encoding of v. It requires v to be a pointer to
+// struct or a slice of pointers to structs.
 func Encode(w io.Writer, v interface{}) (err error) {
 	const errFormat = "cannot encode type %T, need pointer to struct or slice of pointers to structs"
 	defer func() {
@@ -48,32 +50,35 @@ func Encode(w io.Writer, v interface{}) (err error) {
 	}
 }
 
-func Decode(r io.Reader, ptr interface{}) (offset Offset, err error) {
+// Decode parses the JSON API encoded data and stores the result in the value
+// pointed to by v. It requires v to be a pointer to struct or pointer to
+// slice.
+func Decode(r io.Reader, v interface{}) (offset Offset, err error) {
 	const errFormat = "cannot decode to %T, need pointer to struct or pointer to slice"
 	defer func() {
 		if r := recover(); r != nil {
 			if _, ok := r.(runtime.Error); ok {
 				panic(r)
 			}
-			err = fmt.Errorf(errFormat+": %v", ptr, r)
+			err = fmt.Errorf(errFormat+": %v", v, r)
 		}
 	}()
-	if reflect.TypeOf(ptr).Kind() != reflect.Ptr {
-		return Offset{}, fmt.Errorf(errFormat, ptr)
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return Offset{}, fmt.Errorf(errFormat, v)
 	}
-	v := reflect.Indirect(reflect.ValueOf(ptr))
-	switch v.Kind() {
+	val := reflect.Indirect(reflect.ValueOf(v))
+	switch val.Kind() {
 	default:
-		return Offset{}, fmt.Errorf(errFormat, ptr)
+		return Offset{}, fmt.Errorf(errFormat, v)
 	case reflect.Struct:
-		return Offset{}, jsonapi.UnmarshalPayload(r, ptr)
+		return Offset{}, jsonapi.UnmarshalPayload(r, v)
 	case reflect.Slice:
-		data, links, uerr := jsonapi.UnmarshalManyPayloadWithLinks(r, v.Type().Elem())
+		data, links, uerr := jsonapi.UnmarshalManyPayloadWithLinks(r, val.Type().Elem())
 		if uerr != nil {
 			return Offset{}, uerr
 		}
 		for _, d := range data {
-			v.Set(reflect.Append(v, reflect.ValueOf(d)))
+			val.Set(reflect.Append(val, reflect.ValueOf(d)))
 		}
 
 		o := Offset{}
@@ -86,33 +91,4 @@ func Decode(r io.Reader, ptr interface{}) (offset Offset, err error) {
 		}
 		return o, nil
 	}
-}
-
-func EncodeOne(w io.Writer, v interface{}) error {
-	return jsonapi.MarshalOnePayload(w, v)
-}
-
-func EncodeMany(w io.Writer, v interface{}) error {
-	return jsonapi.MarshalManyPayload(w, v)
-}
-
-func DecodeOne(r io.Reader, v interface{}) error {
-	return jsonapi.UnmarshalPayload(r, v)
-}
-
-func DecodeMany(r io.Reader, t reflect.Type) ([]interface{}, Offset, error) {
-	v, links, err := jsonapi.UnmarshalManyPayloadWithLinks(r, t)
-	if err != nil {
-		return nil, Offset{}, err
-	}
-
-	o := Offset{}
-	var perr error
-	if links != nil {
-		o, perr = parseOffset(*links)
-		if perr != nil {
-			return nil, Offset{}, perr
-		}
-	}
-	return v, o, err
 }
