@@ -36,7 +36,7 @@ const (
 // Kitsu API.
 //
 // Kitsu API docs:
-// http://docs.kitsu17.apiary.io/#reference/media/anime/show-anime
+// http://docs.kitsu.apiary.io/#reference/media/anime
 type AnimeService service
 
 // Anime represents a Kitsu anime.

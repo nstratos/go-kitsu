@@ -21,7 +21,7 @@ const (
 // Kitsu API.
 //
 // Kitsu API docs:
-// http://docs.kitsu17.apiary.io/#reference/users/library/show-user
+// http://docs.kitsu.apiary.io/#reference/users/users
 type UserService service
 
 // User represents a Kitsu user.
