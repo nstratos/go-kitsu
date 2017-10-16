@@ -4,15 +4,30 @@ import (
 	"fmt"
 )
 
-// The possible anime show types. They are convenient for making comparisons
-// with Anime.ShowType.
+// The possible age rating values for media types like Anime, Manga and Drama.
 const (
-	AnimeTypeTV      = "TV"
-	AnimeTypeSpecial = "special"
-	AnimeTypeOVA     = "OVA"
-	AnimeTypeONA     = "ONA"
-	AnimeTypeMovie   = "movie"
-	AnimeTypeMusic   = "music"
+	AgeRatingG   = "G"   // General Audiences
+	AgeRatingPG  = "PG"  // Parental Guidance Suggested
+	AgeRatingR   = "R"   // Restricted
+	AgeRatingR18 = "R18" // Explicit
+)
+const (
+	AnimeStatusCurrent    = "current"
+	AnimeStatusFinished   = "finished"
+	AnimeStatusTBA        = "tba"
+	AnimeStatusUnreleased = "unreleased"
+	AnimeStatusUpcoming   = "upcoming"
+)
+
+// The possible anime subtypes. They are convenient for making comparisons
+// with Anime.Subtype.
+const (
+	AnimeSubtypeONA     = "ONA"
+	AnimeSubtypeOVA     = "OVA"
+	AnimeSubtypeTV      = "TV"
+	AnimeSubtypeMovie   = "movie"
+	AnimeSubtypeMusic   = "music"
+	AnimeSubtypeSpecial = "special"
 )
 
 // AnimeService handles communication with the anime related methods of the
@@ -26,48 +41,121 @@ type AnimeService service
 //
 // Additional filters: text, season, streamers
 type Anime struct {
-	ID                  string  `jsonapi:"primary,anime"`
-	Slug                string  `jsonapi:"attr,slug,omitempty"`                // Unique slug used for page URLs, e.g. attack-on-titan.
-	Synopsis            string  `jsonapi:"attr,synopsis,omitempty"`            // Synopsis of the anime, e.g. Several hundred years ago, humans were...
-	CoverImageTopOffset int     `jsonapi:"attr,coverImageTopOffset,omitempty"` // e.g. 263
-	CanonicalTitle      string  `jsonapi:"attr,canonical_title,omitempty"`     // Canonical title for the anime, e.g. Attack on Titan
-	AverageRating       float64 `jsonapi:"attr,averageRating,omitempty"`       // The average of all user ratings for the anime, e.g. 4.26984658306698
-	StartDate           string  `jsonapi:"attr,startDate,omitempty"`           // Date the anime started airing/was released, e.g. 2013-04-07
-	EndDate             string  `jsonapi:"attr,endDate,omitempty"`             // Date the anime finished airing, e.g. 2013-09-28
-	EpisodeCount        int     `jsonapi:"attr,episodeCount,omitempty"`        // How many episodes the anime has, e.g. 25
-	EpisodeLength       int     `jsonapi:"attr,episodeLength,omitempty"`       // How many minutes long each episode is, e.g. 24
-	ShowType            string  `jsonapi:"attr,showType,omitempty"`            // Show format of the anime. Can be compared with AnimeType constants.
-	YoutubeVideoID      string  `jsonapi:"attr,youtubeVideoId,omitempty"`      // YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
-	AgeRating           string  `jsonapi:"attr,ageRating,omitempty"`           // Age rating for the anime, e.g. R
-	AgeRatingGuide      string  `jsonapi:"attr,ageRatingGuide,omitempty"`      // Description of the age rating, e.g. Violence, Profanity
+	ID string `jsonapi:"primary,anime"`
 
-	// The titles of the anime which include:
-	// English title of the anime, e.g. "en": "Attack on Titan"
-	// The romaji title of the anime, e.g. "en_jp": "Shingeki no Kyojin"
-	// Japanese title of the anime, e.g.  "ja_jp": "進撃の巨人"
+	// ISO 8601 date and time, e.g. 2017-07-27T22:21:26.824Z
+	CreatedAt string `jsonapi:"attr,createdAt,omitempty"`
+
+	// ISO 8601 of last modification, e.g. 2017-07-27T22:47:45.129Z
+	UpdatedAt string `jsonapi:"attr,updatedAt,omitempty"`
+
+	// Unique slug used for page URLs, e.g. cowboy-bebop
+	Slug string `jsonapi:"attr,slug,omitempty"`
+
+	// Synopsis of the anime, e.g.
+	//
+	// In the year 2071, humanity has colonoized several of the planets and
+	// moons...
+	Synopsis string `jsonapi:"attr,synopsis,omitempty"`
+
+	// e.g. 400
+	CoverImageTopOffset int `jsonapi:"attr,coverImageTopOffset,omitempty"`
+
+	// Titles in different languages. Other languages will be listed if they
+	// exist, e.g.
+	//
+	// "en": "Attack on Titan"
+	//
+	// "en_jp": "Shingeki no Kyojin"
+	//
+	// "ja_jp": "進撃の巨人"
 	Titles map[string]interface{} `jsonapi:"attr,titles,omitempty"`
 
-	// Shortened nicknames for the anime.
+	// Canonical title for the anime, e.g. Attack on Titan
+	CanonicalTitle string `jsonapi:"attr,canonical_title,omitempty"`
+
+	// Shortened nicknames for the anime, e.g. COWBOY BEBOP
 	AbbreviatedTitles []string `jsonapi:"attr,abbreviatedTitles,omitempty"`
 
-	// The URL template for the poster, e.g. "original": "https://static.hummingbird.me/anime/7442/poster/$1.png"
-	PosterImage map[string]interface{} `jsonapi:"attr,posterImage,omitempty"`
-
-	// The URL template for the cover, e.g. "original": "https://static.hummingbird.me/anime/7442/cover/$1.png"
-	CoverImage map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
+	// The average of all user ratings for the anime, e.g. 88.65
+	AverageRating string `jsonapi:"attr,averageRating,omitempty"`
 
 	// How many times each rating has been given to the anime, e.g.
-	// "0.5": "114",
-	// "1.0": "279",
-	// "1.5": "146",
-	// "2.0": "359",
-	// "2.5": "763",
-	// "3.0": "2331",
-	// "3.5": "3034",
-	// "4.0": "5619",
-	// "4.5": "5951",
-	// "5.0": "12878"
+	//
+	// "2": "72"
+	//
+	// "3": "0"
+	//
+	// ...
+	//
+	// "19": "40"
+	//
+	// "20": "13607"
 	RatingFrequencies map[string]interface{} `jsonapi:"attr,ratingFrequencies,omitempty"`
+
+	// e.g. 40405
+	UserCount int `jsonapi:"attr,userCount,omitempty"`
+
+	// e.g. 3277
+	FavoritesCount int `jsonapi:"attr,favoritesCount,omitempty"`
+
+	// Date the anime started airing/was released, e.g. 2013-04-07
+	StartDate string `jsonapi:"attr,startDate,omitempty"`
+
+	// Date the anime finished airing, e.g. 2013-09-28
+	EndDate string `jsonapi:"attr,endDate,omitempty"`
+
+	// e.g. 10
+	PopularityRank int `jsonapi:"attr,popularityRank,omitempty"`
+
+	// e.g. 10
+	RatingRank int `jsonapi:"attr,ratingRank,omitempty"`
+
+	// Possible values described by the AgeRating constants.
+	AgeRating string `jsonapi:"attr,ageRating,omitempty"`
+
+	// Description of the age rating, e.g. 17+ (violence & profanity)
+	AgeRatingGuide string `jsonapi:"attr,ageRatingGuide,omitempty"`
+
+	// Show format of the anime. Possible values described by the AnimeSubtype
+	// constants.
+	Subtype string `jsonapi:"attr,subtype,omitempty"`
+
+	// Possible values described by the AnimeStatus constants.
+	Status string `jsonapi:"attr,status,omitempty"`
+
+	// The URL template for the poster, e.g.
+	//
+	// "tiny": "https://media.kitsu.io/anime/poster_images/1/tiny.jpg?1431697256"
+	//
+	// "small": "https://media.kitsu.io/anime/poster_images/1/small.jpg?1431697256"
+	//
+	// "medium": "https://media.kitsu.io/anime/poster_images/1/medium.jpg?1431697256"
+	//
+	// "large": "https://media.kitsu.io/anime/poster_images/1/large.jpg?1431697256"
+	//
+	// "original: "https://media.kitsu.io/anime/poster_images/1/original.jpg?1431697256"
+	PosterImage map[string]interface{} `jsonapi:"attr,posterImage,omitempty"`
+
+	// The URL template for the cover, e.g.
+	//
+	// "tiny": "https://media.kitsu.io/anime/cover_images/1/tiny.jpg?1416336000"
+	//
+	// "small": "https://media.kitsu.io/anime/cover_images/1/small.jpg?1416336000"
+	//
+	// "large": "https://media.kitsu.io/anime/cover_images/1/large.jpg?1416336000"
+	//
+	// "original": "https://media.kitsu.io/anime/cover_images/1/original.jpg?1416336000"
+	CoverImage map[string]interface{} `jsonapi:"attr,coverImage,omitempty"`
+
+	// How many episodes the anime has, e.g. 25
+	EpisodeCount int `jsonapi:"attr,episodeCount,omitempty"`
+
+	// How many minutes long each episode is, e.g. 24
+	EpisodeLength int `jsonapi:"attr,episodeLength,omitempty"`
+
+	// YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
+	YoutubeVideoID string `jsonapi:"attr,youtubeVideoId,omitempty"`
 
 	// Relationships.
 

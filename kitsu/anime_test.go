@@ -61,7 +61,7 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 					},
 					"canonical_title": "Attack on Titan",
 					"abbreviatedTitles": [ "AoT", "AT" ],
-					"averageRating": 4.26984658306698,
+					"averageRating": "88.65",
 					"ratingFrequencies": {
 						"0.5": "114",
 						"1.0": "279",
@@ -84,7 +84,7 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 					},
 					"episodeCount": 25,
 					"episodeLength": 24,
-					"showType": "TV",
+					"subtype": "TV",
 					"youtubeVideoId": "n4Nj6Y_SNYI",
 					"ageRating": "R",
 					"ageRatingGuide": "Violence, Profanity"
@@ -110,7 +110,7 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 		},
 		CanonicalTitle:    "Attack on Titan",
 		AbbreviatedTitles: []string{"AoT", "AT"},
-		AverageRating:     4.26984658306698,
+		AverageRating:     "88.65",
 		RatingFrequencies: map[string]interface{}{
 			"0.5": "114",
 			"1.0": "279",
@@ -133,7 +133,7 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 		},
 		EpisodeCount:   25,
 		EpisodeLength:  24,
-		ShowType:       "TV",
+		Subtype:        AnimeSubtypeTV,
 		YoutubeVideoID: "n4Nj6Y_SNYI",
 		AgeRating:      "R",
 		AgeRatingGuide: "Violence, Profanity",
@@ -195,14 +195,14 @@ func TestAnimeService_List(t *testing.T) {
 				"type": "anime",
 				"attributes": {
 					"slug": "attack-on-titan",
-					"showType": "TV"
+					"subtype": "TV"
 				}
 			}, {
 				"id": "7442",
 				"type": "anime",
 				"attributes": {
 					"slug": "attack-on-titan",
-					"showType": "TV"
+					"subtype": "TV"
 				}
 			}],
 			"links": {
@@ -225,8 +225,8 @@ func TestAnimeService_List(t *testing.T) {
 	}
 
 	want := []*Anime{
-		{ID: "7442", Slug: "attack-on-titan", ShowType: AnimeTypeTV},
-		{ID: "7442", Slug: "attack-on-titan", ShowType: AnimeTypeTV},
+		{ID: "7442", Slug: "attack-on-titan", Subtype: AnimeSubtypeTV},
+		{ID: "7442", Slug: "attack-on-titan", Subtype: AnimeSubtypeTV},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Anime.List mismatch\nhave: %#+v\nwant: %#+v", got, want)
