@@ -11,6 +11,8 @@ const (
 	AgeRatingR   = "R"   // Restricted
 	AgeRatingR18 = "R18" // Explicit
 )
+
+// Possible values for Anime.Status.
 const (
 	AnimeStatusCurrent    = "current"
 	AnimeStatusFinished   = "finished"
@@ -42,6 +44,8 @@ type AnimeService service
 // Additional filters: text, season, streamers
 type Anime struct {
 	ID string `jsonapi:"primary,anime"`
+
+	// --- Attributes ---
 
 	// ISO 8601 date and time, e.g. 2017-07-27T22:21:26.824Z
 	CreatedAt string `jsonapi:"attr,createdAt,omitempty"`
@@ -157,7 +161,7 @@ type Anime struct {
 	// YouTube video id for Promotional Video, e.g. n4Nj6Y_SNYI
 	YoutubeVideoID string `jsonapi:"attr,youtubeVideoId,omitempty"`
 
-	// Relationships.
+	// --- Relationships ---
 
 	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
 	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
