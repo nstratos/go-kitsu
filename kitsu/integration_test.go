@@ -6,25 +6,20 @@ import (
 	"github.com/nstratos/go-kitsu/kitsu"
 )
 
-const (
-	results = 5
-)
-
-var client *kitsu.Client
-
-func setup(t *testing.T) {
-	// Create kitsu client for tests.
-	client = kitsu.NewClient(nil)
+// setup creates a new Kitsu client for tests.
+func setup(t *testing.T) *kitsu.Client {
+	return kitsu.NewClient(nil)
 }
 
 func TestAnimeServiceIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	setup(t)
+	c := setup(t)
+	const results = 5
 
 	// Get anime list with options to include specific limit and includes.
-	list, resp, err := client.Anime.List(
+	list, resp, err := c.Anime.List(
 		kitsu.Limit(results),
 		kitsu.Include("castings.character", "castings.person"),
 	)
@@ -59,7 +54,8 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	}
 
 	// Get details for the first anime in the list.
-	bebop, _, err := client.Anime.Show(list[0].ID,
+	bebop, _, err := c.Anime.Show(
+		list[0].ID,
 		kitsu.Include("castings.character", "castings.person"),
 	)
 	if err != nil {
