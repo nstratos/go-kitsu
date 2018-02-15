@@ -1,3 +1,5 @@
+// +build integration
+
 package kitsu_test
 
 import (
@@ -12,9 +14,6 @@ func setup(t *testing.T) *kitsu.Client {
 }
 
 func TestAnimeServiceIntegration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
 	c := setup(t)
 	const results = 5
 

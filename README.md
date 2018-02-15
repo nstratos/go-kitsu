@@ -122,23 +122,33 @@ As a result, this package provides as many guarantees as the edge endpoint.
 Nevertheless there is effort to keep the package as stable as possible through
 integration tests that exercise the package against the live Kitsu API.
 
-## Unit & Integration testing
+## Unit testing
 
-All the tests (unit & integration) run by default using:
+To run all unit tests:
 
     go test
 
-In order to run only the unit tests use:
-
-    go test -short
-
 To see test coverage:
 
-    go test -short -coverprofile=cover.out && go tool cover -html=cover.out
+    go test -cover
+
+For an HTML presentation of the coverage information:
+
+    go test -coverprofile=cover.out && go tool cover -html=cover.out
 
 And for heat maps:
 
-    go test -short -coverprofile=cover.out -covermode=count && go tool cover -html=cover.out
+    go test -coverprofile=cover.out -covermode=count && go tool cover -html=cover.out
+
+## Integration testing
+
+The integration tests will exercise the package against the live Kitsu API and
+will hopefully reveal incompatible changes. Since they are using live data,
+they take much longer to run and there is a chance for false positives.
+
+To run the integration tests:
+
+    go test -tags=integration
 
 ## License
 
