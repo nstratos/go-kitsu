@@ -132,6 +132,14 @@ In order to run only the unit tests use:
 
     go test -short
 
+To see test coverage:
+
+    go test -short -coverprofile=cover.out && go tool cover -html=cover.out
+
+And for heat maps:
+
+    go test -short -coverprofile=cover.out -covermode=count && go tool cover -html=cover.out
+
 ## License
 
 MIT
