@@ -56,10 +56,10 @@ type User struct {
 	WaifuOrHusbando string `jsonapi:"attr,waifuOrHusbando,omitempty"`
 
 	// e.g. 1716
-	followersCount int `jsonapi:"attr,followersCount,omitempty"`
+	FollowersCount int `jsonapi:"attr,followersCount,omitempty"`
 
 	// e.g. 2031
-	followingCount int `jsonapi:"attr,followingCount,omitempty"`
+	FollowingCount int `jsonapi:"attr,followingCount,omitempty"`
 
 	Birthday string `jsonapi:"attr,birthday,omitempty"`
 	Gender   string `jsonapi:"attr,gender,omitempty"`
