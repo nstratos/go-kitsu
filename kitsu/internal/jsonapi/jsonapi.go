@@ -22,7 +22,7 @@ func Encode(w io.Writer, v interface{}) (err error) {
 			if _, ok := r.(runtime.Error); ok {
 				panic(r)
 			}
-			err = fmt.Errorf(errFormat+": %v", v, r)
+			err = fmt.Errorf("cannot encode type %T: %v", v, r)
 		}
 	}()
 	if isZeroOfUnderlyingType(v) {
@@ -36,7 +36,7 @@ func Encode(w io.Writer, v interface{}) (err error) {
 		if t.Elem().Kind() != reflect.Struct {
 			return fmt.Errorf(errFormat, v)
 		}
-		return jsonapi.MarshalOnePayload(w, v)
+		return jsonapi.MarshalPayload(w, v)
 	case reflect.Slice:
 		s := reflect.ValueOf(v)
 		if s.Type().Elem().Kind() != reflect.Ptr {
@@ -46,7 +46,7 @@ func Encode(w io.Writer, v interface{}) (err error) {
 			return fmt.Errorf(errFormat, v)
 
 		}
-		return jsonapi.MarshalManyPayload(w, v)
+		return jsonapi.MarshalPayload(w, v)
 	}
 }
 
@@ -60,7 +60,7 @@ func Decode(r io.Reader, v interface{}) (offset Offset, err error) {
 			if _, ok := r.(runtime.Error); ok {
 				panic(r)
 			}
-			err = fmt.Errorf(errFormat+": %v", v, r)
+			err = fmt.Errorf("cannot decode to %T: %v", v, r)
 		}
 	}()
 	if reflect.TypeOf(v).Kind() != reflect.Ptr {
