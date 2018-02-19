@@ -91,9 +91,9 @@ welcome.
 - [ ] Library Entries
   - [x] Show
   - [x] List
-  - [ ] Create
+  - [x] Create
   - [ ] Update
-  - [ ] Delete
+  - [x] Delete
 - [ ] Library Entry Logs
 
 ### Users
@@ -143,12 +143,16 @@ And for heat maps:
 ## Integration testing
 
 The integration tests will exercise the package against the live Kitsu API and
-will hopefully reveal incompatible changes. Since they are using live data,
-they take much longer to run and there is a chance for false positives.
+will hopefully reveal incompatible changes. Since these tests are using live
+data, they take much longer to run and there is a chance for false positives.
+
+The tests need a dedicated test account for authentication. A newly created
+account has no slug set by default. To set the slug, open the profile settings
+and set Profile URL.
 
 To run the integration tests:
 
-    go test -tags=integration
+    go test -tags=integration -slug="<test account slug>" -password="<test account password>"
 
 ## License
 

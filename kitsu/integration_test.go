@@ -140,7 +140,7 @@ func TestLibraryServiceIntegration(t *testing.T) {
 
 	// Account must have no entries for easier testing.
 	if got, want := len(entries), 0; got != want {
-		t.Fatalf("Account %q has %d entries but should have %d", *testAccountSlug, got, want)
+		t.Fatalf("Account %q has %d entries but should have %d.", *testAccountSlug, got, want)
 	}
 
 	// Add a new library entry.
@@ -178,6 +178,6 @@ func TestLibraryServiceIntegration(t *testing.T) {
 
 	// Check account has the correct number of entries.
 	if got, want := len(entries), 1; got != want {
-		t.Fatalf("Account %q has %d entries but should have %d", *testAccountSlug, got, want)
+		t.Fatalf("Account %q has %d entries but should have %d.", *testAccountSlug, got, want)
 	}
 }
