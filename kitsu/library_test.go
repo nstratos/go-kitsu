@@ -294,3 +294,79 @@ func TestLibraryService_List_filterOptionWithUnknownAttribute(t *testing.T) {
 		t.Errorf("Library.List with unknown filter\nhave: %#v\nwant: %#v", got, want)
 	}
 }
+
+func TestLibraryService_Create(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/"+defaultAPIVersion+"library-entries", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testHeader(t, r, "Accept", defaultMediaType)
+		testHeader(t, r, "Content-Type", defaultMediaType)
+
+		const serverResponse = `
+        {
+           "data":{
+              "id":"20181115",
+              "type":"libraryEntries",
+              "links":{
+                 "self":"https://kitsu.io/api/edge/library-entries/20181115"
+              },
+              "attributes":{
+                 "createdAt":"2018-02-19T17:44:36.911Z",
+                 "updatedAt":"2018-02-19T17:44:36.911Z",
+                 "status":"current",
+                 "progress":4,
+                 "volumesOwned":0,
+                 "reconsuming":false,
+                 "reconsumeCount":0,
+                 "notes":null,
+                 "private":false,
+                 "reactionSkipped":"unskipped",
+                 "progressedAt":"2018-02-19T17:44:36.911Z",
+                 "startedAt":"2018-02-19T17:44:36.911Z",
+                 "finishedAt":null,
+                 "rating":"0.5",
+                 "ratingTwenty":2
+              }
+           }
+        }`
+		fmt.Fprint(w, serverResponse)
+	})
+
+	newEntry := &LibraryEntry{
+		Status:   LibraryEntryStatusCurrent,
+		Progress: 4,
+		Rating:   "0.5",
+		User: &User{
+			ID: "183388",
+		},
+		Media: &Anime{
+			ID: "1",
+		},
+	}
+
+	got, _, err := client.Library.Create(newEntry) //kitsu.Include("anime", "user"),
+	if err != nil {
+		t.Fatal("could not create library:", err)
+	}
+
+	want := &LibraryEntry{
+		ID:        "20181115",
+		Status:    LibraryEntryStatusCurrent,
+		Progress:  4,
+		Rating:    "0.5",
+		UpdatedAt: "2018-02-19T17:44:36.911Z",
+	}
+	deepEqual(t, got, want, "create library return mismatch")
+}
+
+func deepEqual(t *testing.T, got, want interface{}, message string) {
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("%s\nhave: %#+v\nwant: %#+v", message, got, want)
+		data, _ := json.Marshal(got)
+		fmt.Println(string(data))
+		data, _ = json.Marshal(want)
+		fmt.Println(string(data))
+	}
+}

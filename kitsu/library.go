@@ -76,7 +76,7 @@ func (s *LibraryService) List(opts ...URLOption) ([]*LibraryEntry, *Response, er
 }
 
 // Create creates a library entry. This method needs authentication.
-func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) ([]*LibraryEntry, *Response, error) {
+func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) (*LibraryEntry, *Response, error) {
 	u := defaultAPIVersion + "library-entries"
 
 	req, err := s.client.NewRequest("POST", u, e, opts...)
@@ -84,11 +84,11 @@ func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) ([]*LibraryE
 		return nil, nil, err
 	}
 
-	var entries []*LibraryEntry
-	resp, err := s.client.Do(req, entries)
+	var entry = new(LibraryEntry)
+	resp, err := s.client.Do(req, entry)
 	if err != nil {
 		return nil, resp, err
 	}
 
-	return entries, resp, nil
+	return entry, resp, nil
 }
