@@ -92,3 +92,20 @@ func (s *LibraryService) Create(e *LibraryEntry, opts ...URLOption) (*LibraryEnt
 
 	return entry, resp, nil
 }
+
+// Delete deletes a library entry. This method needs authentication.
+func (s *LibraryService) Delete(id string, opts ...URLOption) (*Response, error) {
+	u := defaultAPIVersion + "library-entries/" + id
+
+	req, err := s.client.NewRequest("DELETE", u, nil, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return resp, err
+	}
+
+	return resp, nil
+}
