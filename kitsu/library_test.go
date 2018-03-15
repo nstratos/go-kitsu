@@ -370,3 +370,49 @@ func deepEqual(t *testing.T, got, want interface{}, message string) {
 		fmt.Println(string(data))
 	}
 }
+
+func TestLibraryService_Delete(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/"+defaultAPIVersion+"library-entries/1644", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		testHeader(t, r, "Accept", defaultMediaType)
+		w.WriteHeader(202)
+	})
+
+	resp, err := client.Library.Delete("1644")
+	if err != nil {
+		t.Errorf("Library.Delete returned error: %v", err)
+	}
+
+	if got, want := resp.StatusCode, 202; got != want {
+		t.Errorf("Library.Delete response code = %d, want %d", got, want)
+	}
+}
+
+func TestLibraryService_Delete_404(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/"+defaultAPIVersion+"library-entries/1644", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		testHeader(t, r, "Accept", defaultMediaType)
+		w.WriteHeader(404)
+		w.Header().Set("Content-Type", defaultMediaType)
+		json.NewEncoder(w).Encode(&struct{ Errors []Error }{[]Error{{Title: "Record not found", Code: "404", Status: "404"}}})
+	})
+
+	resp, err := client.Library.Delete("1644")
+	if err == nil {
+		t.Error("Library.Delete for 404 expected to return error")
+	}
+
+	if _, ok := err.(*ErrorResponse); !ok {
+		t.Error("expected error to be *ErrorResponse")
+	}
+
+	if got, want := resp.StatusCode, 404; got != want {
+		t.Errorf("Library.Delete response code = %d, want %d", got, want)
+	}
+}
