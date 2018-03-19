@@ -59,7 +59,7 @@ func TestAnimeService_Show_decodeAttributes(t *testing.T) {
 						"en_jp": "Shingeki no Kyojin",
 						"ja_jp": "進撃の巨人"
 					},
-					"canonical_title": "Attack on Titan",
+					"canonicalTitle": "Attack on Titan",
 					"abbreviatedTitles": [ "AoT", "AT" ],
 					"averageRating": "88.65",
 					"ratingFrequencies": {
