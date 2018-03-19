@@ -76,7 +76,7 @@ type Anime struct {
 	Titles map[string]interface{} `jsonapi:"attr,titles,omitempty"`
 
 	// Canonical title for the anime, e.g. Attack on Titan
-	CanonicalTitle string `jsonapi:"attr,canonical_title,omitempty"`
+	CanonicalTitle string `jsonapi:"attr,canonicalTitle,omitempty"`
 
 	// Shortened nicknames for the anime, e.g. COWBOY BEBOP
 	AbbreviatedTitles []string `jsonapi:"attr,abbreviatedTitles,omitempty"`
