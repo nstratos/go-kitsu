@@ -25,98 +25,18 @@ import "github.com/nstratos/go-kitsu/kitsu"
 
 ## Project Status
 
-This project is currently under development. Below are all the currently
-documented Kitsu API resources. The marked ones are currently implemented by
-this package. The rest will be implemented over time. Contributions are
-welcome.
+This project is currently under development. Expect things to change. Some
+useful methods like getting users, library entries and anime are already
+implemented. For a full list of what needs to be implemented please check
+[Roadmap.md](Roadmap.md).
 
-### Characters & People
 
-- [ ] Anime Characters
-- [ ] Anime Productions
-- [ ] Anime Staff
-- [ ] Castings
-- [ ] Characters
-- [ ] Manga Characters
-- [ ] Manga Staff
-- [ ] People
-- [ ] Producers
-
-### Groups
-
-- [ ] Group Categories
-- [ ] Group Members
-- [ ] Group Neighbors
-- [ ] Group Permissions
-- [ ] Groups
-
-### Media
-
-- [ ] Anime
-  - [x] Show
-  - [x] List
-  - [ ] Create
-  - [ ] Update
-  - [ ] Delete
-- [ ] Categories
-- [ ] Category Favorites
-- [ ] Chapters
-- [ ] Drama
-- [ ] Episodes
-- [ ] Franchises
-- [ ] Genres
-- [ ] Installments
-- [ ] Manga
-- [ ] Mappings
-- [ ] Media Follows
-- [ ] Media Relationships
-- [ ] Streamers
-- [ ] Streaming Links
-
-### Posts
-- [ ] Comments
-- [ ] Post Likes
-- [ ] Post Follows
-- [ ] Posts
-
-### Reactions
-- [ ] Media Reactions
-- [ ] Review Likes
-- [ ] Reviews
-
-### Site Announcements
-- [ ] Site Announcements
-
-### User Libraries
-- [ ] Library Entries
-  - [x] Show
-  - [x] List
-  - [x] Create
-  - [ ] Update
-  - [x] Delete
-- [ ] Library Entry Logs
-
-### Users
-- [ ] Favorites
-- [ ] Follows
-- [ ] Profile Link Sites
-- [ ] Profile Links
-- [ ] Roles
-- [ ] Stats
-- [ ] User Roles
-- [ ] Users
-  - [x] Show
-  - [x] List
-  - [ ] Create
-  - [ ] Update
-  - [ ] Delete
-
-## Stability
+## Endpoint Stability
 
 The Kitsu API does not currently provide endpoint versioning. The only
 available endpoint is the appropriately named "edge" endpoint
-(https://kitsu.io/api/edge/) which "offers no guarantees: anything could change
-at any time" (to quote the Kitsu API docs).
+(https://kitsu.io/api/edge/) which (to quote the Kitsu API docs) "offers no
+guarantees: anything could change at any time".
 
 As a result, this package provides as many guarantees as the edge endpoint.
 Nevertheless there is effort to keep the package as stable as possible through
