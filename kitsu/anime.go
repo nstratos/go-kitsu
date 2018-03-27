@@ -165,6 +165,7 @@ type Anime struct {
 
 	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
 	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
+	Mappings []*Mapping `jsonapi:"relation,mappings,omitempty"`
 }
 
 // Genre represents a Kitsu media genre. Genre is a relationship of Kitsu media
