@@ -212,7 +212,7 @@ type Character struct {
 	ID          string                 `jsonapi:"primary,characters"`
 	Slug        string                 `jsonapi:"attr,slug"`
 	Name        string                 `jsonapi:"attr,name"`
-	MALID       int                    `jsonapi:"attr,malId"`
+	MALID       float64                `jsonapi:"attr,malId"`
 	Description string                 `jsonapi:"attr,description"`
 	Image       map[string]interface{} `jsonapi:"attr,image"`
 }
@@ -220,10 +220,10 @@ type Character struct {
 // Person represents a person that is involved with a certain media. It can be
 // voice actors, animators, etc. Person is a relationship of Casting.
 type Person struct {
-	ID    string `jsonapi:"primary,people"`
-	Name  string `jsonapi:"attr,name"`
-	MALID int    `jsonapi:"attr,malId"`
-	Image string `jsonapi:"attr,image"`
+	ID    string                 `jsonapi:"primary,people"`
+	Name  string                 `jsonapi:"attr,name"`
+	MALID string                 `jsonapi:"attr,malId"`
+	Image map[string]interface{} `jsonapi:"attr,image"`
 }
 
 // Show returns details for a specific Anime by providing a unique identifier

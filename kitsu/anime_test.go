@@ -352,7 +352,7 @@ func TestAnimeService_List_include(t *testing.T) {
                  "type":"people",
                  "attributes":{
                     "name":"Kouichi Yamadera",
-                    "malId":11
+                    "malId":"11"
                  }
               },
               {
@@ -388,7 +388,7 @@ func TestAnimeService_List_include(t *testing.T) {
 					ID:   "47",
 					Role: "Voice Actor", VoiceActor: true, Featured: true,
 					Language: "Japanese",
-					Person:   &Person{ID: "47", Name: "Kouichi Yamadera", MALID: 11},
+					Person:   &Person{ID: "47", Name: "Kouichi Yamadera", MALID: "11"},
 					Character: &Character{ID: "2", Name: "Spike Spiegel", MALID: 1,
 						Image: map[string]interface{}{"original": "https://media.kitsu.io/characters/images/2/original.jpg?1483096805"},
 					},
@@ -401,7 +401,7 @@ func TestAnimeService_List_include(t *testing.T) {
 					ID:   "47",
 					Role: "Voice Actor", VoiceActor: true, Featured: true,
 					Language: "Japanese",
-					Person:   &Person{ID: "47", Name: "Kouichi Yamadera", MALID: 11},
+					Person:   &Person{ID: "47", Name: "Kouichi Yamadera", MALID: "11"},
 					Character: &Character{ID: "2", Name: "Spike Spiegel", MALID: 1,
 						Image: map[string]interface{}{"original": "https://media.kitsu.io/characters/images/2/original.jpg?1483096805"},
 					},
