@@ -3,7 +3,7 @@ module github.com/nstratos/go-kitsu
 go 1.18
 
 require (
-	github.com/nstratos/jsonapi v0.0.0-20180216150350-8c8652d58474
+	github.com/google/jsonapi v1.0.0
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 )
 

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/nstratos/jsonapi"
+	"github.com/google/jsonapi"
 )
 
 // Offset represents the pagination offset returned in the API response when

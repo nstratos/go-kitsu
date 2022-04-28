@@ -1,12 +1,14 @@
 package jsonapi
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
 	"runtime"
 
-	"github.com/nstratos/jsonapi"
+	"github.com/google/jsonapi"
 )
 
 func isZeroOfUnderlyingType(x interface{}) bool {
@@ -50,6 +52,11 @@ func Encode(w io.Writer, v interface{}) (err error) {
 	}
 }
 
+type extra struct {
+	Links *jsonapi.Links `json:"links,omitempty"`
+	Meta  *jsonapi.Meta  `json:"meta,omitempty"` // Not returned for now.
+}
+
 // Decode parses the JSON API encoded data and stores the result in the value
 // pointed to by v. It requires v to be a pointer to struct or pointer to
 // slice.
@@ -73,7 +80,11 @@ func Decode(r io.Reader, v interface{}) (offset Offset, err error) {
 	case reflect.Struct:
 		return Offset{}, jsonapi.UnmarshalPayload(r, v)
 	case reflect.Slice:
-		data, links, uerr := jsonapi.UnmarshalManyPayloadWithLinks(r, val.Type().Elem())
+		var buf bytes.Buffer
+		tee := io.TeeReader(r, &buf)
+
+		// Decode data.
+		data, uerr := jsonapi.UnmarshalManyPayload(tee, val.Type().Elem())
 		if uerr != nil {
 			return Offset{}, uerr
 		}
@@ -81,10 +92,16 @@ func Decode(r io.Reader, v interface{}) (offset Offset, err error) {
 			val.Set(reflect.Append(val, reflect.ValueOf(d)))
 		}
 
+		// Decode links.
+		x := new(extra)
+		if err := json.NewDecoder(&buf).Decode(x); err != nil {
+			return Offset{}, err
+		}
+
 		o := Offset{}
 		var perr error
-		if links != nil {
-			o, perr = parseOffset(*links)
+		if x.Links != nil {
+			o, perr = parseOffset(*x.Links)
 			if perr != nil {
 				return Offset{}, perr
 			}
