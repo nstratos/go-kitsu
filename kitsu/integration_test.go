@@ -24,10 +24,6 @@ var (
 	testAccountPassword = flag.String("password", "", "Kitsu test account password to use for authentication")
 )
 
-func init() {
-	flag.Parse()
-}
-
 // setup creates a new Kitsu client for tests. It needs a test account for
 // authentication.
 func setup(t *testing.T) *kitsu.Client {
