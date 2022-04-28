@@ -3,6 +3,7 @@ package kitsu_test
 import (
 	"context"
 	"flag"
+	"os"
 	"sync"
 	"testing"
 
@@ -19,7 +20,7 @@ var (
 	// field in the profile settings.
 
 	testAccountSlug     = flag.String("slug", "testgopher", "Kitsu test account slug to use for authentication")
-	testAccountPassword = flag.String("password", "", "Kitsu test account password to use for authentication")
+	testAccountPassword = flag.String("password", os.Getenv("TEST_ACCOUNT_PASSWORD"), "Kitsu test account password to use for authentication")
 )
 
 // setup creates a new Kitsu client for tests. It needs a test account for

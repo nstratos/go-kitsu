@@ -1,0 +1,20 @@
+name: integration
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * 6"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.x
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Mod verify
+      run: go mod verify
+    - name: Run all tests including integration tests
+      run: |
+        TEST_ACCOUNT_PASSWORD='${{ secrets.TEST_ACCOUNT_PASSWORD }}' go test -v ./...
