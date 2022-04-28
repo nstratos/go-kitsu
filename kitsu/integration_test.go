@@ -1,5 +1,3 @@
-// +build integration
-
 package kitsu_test
 
 import (
@@ -28,9 +26,10 @@ var (
 // authentication.
 func setup(t *testing.T) *kitsu.Client {
 	if *testAccountPassword == "" {
-		t.Errorf("No password provided for account with slug %q.", *testAccountSlug)
-		t.Error("These tests are meant to be run with a dedicated test account.")
-		t.Fatal("You might want to use: go test -tags=integration -slug '<test account slug>' -password '<test account password>'")
+		t.Logf("No password provided for account with slug %q.", *testAccountSlug)
+		t.Log("These tests are meant to be run with a dedicated test account.")
+		t.Log("You might want to use: go test -tags=integration -slug '<test account slug>' -password '<test account password>'")
+		t.Skip("Skipping integration tests.")
 	}
 
 	conf := &oauth2.Config{
