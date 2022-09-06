@@ -1,5 +1,6 @@
-cmd
-local.json
 count.out
 cover.out
-debug.txt
+example/kitsuauth/*.json
+*token-cache.txt
+*.exe
+.vscode
