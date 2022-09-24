@@ -2,7 +2,7 @@ package kitsu
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -107,7 +107,7 @@ func TestClient_NewRequest_encode(t *testing.T) {
 		}
 
 		// Test that body gets encoded to JSON API.
-		body, _ := ioutil.ReadAll(req.Body)
+		body, _ := io.ReadAll(req.Body)
 		if got, want := string(body), tt.out; got != want {
 			t.Errorf("NewRequest(%#v) Body \nhave: %q\nwant: %q", tt.in, got, want)
 		}
