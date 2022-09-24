@@ -92,11 +92,11 @@ func Offset(offset int) URLOption {
 // "genres" can be passed as the attribute and "action" as one of the values
 // like so:
 //
-//     Filter("genres", "action").
+//	Filter("genres", "action").
 //
 // More than one values can be provided to be filtered:
 //
-//     Filter("genres", "action", "drama").
+//	Filter("genres", "action", "drama").
 //
 // Some resources support additional filters.
 //
@@ -131,16 +131,15 @@ func Search(query string) URLOption {
 //
 // For example to sort by the attribute "averageRating" of Anime:
 //
-//    Sort("averageRating")
+//	Sort("averageRating")
 //
 // And for descending order:
 //
-//    Sort("-averageRating")
+//	Sort("-averageRating")
 //
 // Many sort parameters can be specified:
 //
-//    Sort("followersCount", "-followingCount")
-//
+//	Sort("followersCount", "-followingCount")
 func Sort(attributes ...string) URLOption {
 	return func(v *url.Values) {
 		v.Set("sort", strings.Join(attributes, ","))
@@ -151,12 +150,11 @@ func Sort(attributes ...string) URLOption {
 // relationships and successive relationships using a dot notation. For example
 // for Anime to also include Casting:
 //
-//    Include("castings")
+//	Include("castings")
 //
 // If Casting is needed to also include Person and Character:
 //
-//    Include("castings.character", "castings.person"),
-//
+//	Include("castings.character", "castings.person"),
 func Include(relationships ...string) URLOption {
 	return func(v *url.Values) {
 		v.Set("include", strings.Join(relationships, ","))
@@ -243,13 +241,13 @@ func newResponse(r *http.Response) *Response {
 //
 // Decoding requires v to be a pointer to a struct. For example:
 //
-//   a := new(Anime)
-//   c.client.Do(req, a)
+//	a := new(Anime)
+//	c.client.Do(req, a)
 //
 // Alternatively you may pass the address of a slice of pointers to structs:
 //
-//   var anime []*Anime
-//   c.client.Do(req, &anime)
+//	var anime []*Anime
+//	c.client.Do(req, &anime)
 //
 // Do closes the response body on return.
 func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
@@ -300,7 +298,7 @@ func (r *ErrorResponse) Error() string {
 		r.Response.StatusCode, r.Errors)
 }
 
-// Error holds the details of each invidivual error in an ErrorResponse.
+// Error holds the details of each individual error in an ErrorResponse.
 //
 // JSON API docs: http://jsonapi.org/format/#error-objects
 type Error struct {
