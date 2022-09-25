@@ -163,9 +163,13 @@ type Anime struct {
 
 	// --- Relationships ---
 
-	Genres   []*Genre   `jsonapi:"relation,genres,omitempty"`
+	Genres     []*Genre          `jsonapi:"relation,genres,omitempty"`
+	Mappings   []*Mapping        `jsonapi:"relation,mappings,omitempty"`
+	Staff      []*AnimeStaff     `jsonapi:"relation,animeStaff,omitempty"`
+	Characters []*AnimeCharacter `jsonapi:"relation,animeCharacters,omitempty"`
+
+	// Deprecated: Use Staff instead.
 	Castings []*Casting `jsonapi:"relation,castings,omitempty"`
-	Mappings []*Mapping `jsonapi:"relation,mappings,omitempty"`
 }
 
 // Genre represents a Kitsu media genre. Genre is a relationship of Kitsu media
@@ -175,10 +179,16 @@ type Genre struct {
 	Name        string `jsonapi:"attr,name"`
 	Slug        string `jsonapi:"attr,slug"`
 	Description string `jsonapi:"attr,description"`
+	CreatedAt   string `jsonapi:"attr,createdAt,omitempty"`
+	UpdatedAt   string `jsonapi:"attr,updatedAt,omitempty"`
 }
 
 // Casting represents a Kitsu media casting. Casting is a relationship of Kitsu
 // media types like Anime, Manga and Drama.
+//
+// Deprecated: Use relationship animeStaff.person instead. At the time of
+// writing, the Kitsu API returns 500 when the client asks for castings.
+// According to their documentation, castings is being replaced by Anime Staff.
 type Casting struct {
 	ID         string     `jsonapi:"primary,castings"`
 	Role       string     `jsonapi:"attr,role"`
@@ -206,6 +216,14 @@ type Casting struct {
 // untyped string constants to avoid unnecessary conversions when working with
 // those fields.
 
+// AnimeCharacter represents the characters of an Anime entry.
+type AnimeCharacter struct {
+	ID   string `jsonapi:"primary,animeCharacters"`
+	Role string `jsonapi:"attr,role"`
+
+	Character *Character `jsonapi:"relation,character,omitempty"`
+}
+
 // Character represents a Kitsu character like the fictional characters that
 // appear in anime, manga and drama. Character is a relationship of Casting.
 type Character struct {
@@ -217,13 +235,24 @@ type Character struct {
 	Image       map[string]interface{} `jsonapi:"attr,image"`
 }
 
+// AnimeStaff represents the staff of an Anime entry.
+type AnimeStaff struct {
+	ID        string `jsonapi:"primary,animeStaff"`
+	Role      string `jsonapi:"attr,role,omitempty"`
+	CreatedAt string `jsonapi:"attr,createdAt,omitempty"` // ISO 8601 date and time e.g. 2017-07-27T22:21:26.824Z
+	UpdatedAt string `jsonapi:"attr,updatedAt,omitempty"` // ISO 8601 of last modification e.g. 2017-07-27T22:47:45.129Z
+
+	Person *Person `jsonapi:"relation,person,omitempty"`
+}
+
 // Person represents a person that is involved with a certain media. It can be
 // voice actors, animators, etc. Person is a relationship of Casting.
 type Person struct {
-	ID    string                 `jsonapi:"primary,people"`
-	Name  string                 `jsonapi:"attr,name"`
-	MALID string                 `jsonapi:"attr,malId"`
-	Image map[string]interface{} `jsonapi:"attr,image"`
+	ID          string                 `jsonapi:"primary,people"`
+	Name        string                 `jsonapi:"attr,name"`
+	MALID       string                 `jsonapi:"attr,malId"`
+	Description string                 `jsonapi:"attr,description"`
+	Image       map[string]interface{} `jsonapi:"attr,image"`
 }
 
 // Show returns details for a specific Anime by providing a unique identifier

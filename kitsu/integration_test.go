@@ -70,7 +70,7 @@ func TestAnimeServiceIntegration(t *testing.T) {
 	// Get anime list with options to include specific limit and includes.
 	list, resp, err := c.Anime.List(
 		kitsu.Limit(results),
-		kitsu.Include("castings.character", "castings.person"),
+		kitsu.Include("animeCharacters.character", "animeStaff.person"),
 	)
 	if err != nil {
 		t.Fatal("client.Anime.List returned err:", err)
@@ -95,31 +95,46 @@ func TestAnimeServiceIntegration(t *testing.T) {
 		t.Fatalf("client.Anime.List results = %d, want %d", len(list), results)
 	}
 
-	// Check that all anime include their castings.
+	// Check that at least one anime has characters and staff included.
+	animeListIncludesCharacters := false
+	animeListIncludesStaff := false
 	for _, a := range list {
-		if a.Castings == nil {
-			t.Fatalf("client.Anime.List expected to include castings. %s %s castings is nil", a.ID, a.Slug)
+		if a.Characters != nil {
+			animeListIncludesCharacters = true
+		}
+		if a.Staff != nil {
+			animeListIncludesStaff = true
 		}
 	}
+	if !animeListIncludesCharacters {
+		t.Fatal("client.Anime.List expected at least one Anime to include characters.")
+	}
+	if !animeListIncludesStaff {
+		t.Fatal("client.Anime.List expected at least one Anime to include staff.")
+	}
 
-	// Get details for the first anime in the list.
+	// Get details for 'Cowboy Bebop: The Movie' because this Kitsu entry
+	// includes both characters and staff.
+	const bebopMovieID = "2"
 	bebop, _, err := c.Anime.Show(
-		list[0].ID,
-		kitsu.Include("castings.character", "castings.person"),
+		bebopMovieID,
+		kitsu.Include("animeCharacters.character", "animeStaff.person"),
 	)
 	if err != nil {
 		t.Fatal("client.Anime.Show returned err:", err)
 	}
 
-	// First result in kitsu database is Cowboy Bebop.
-	const firstResultSlug = "cowboy-bebop"
-	if bebop.Slug != firstResultSlug {
-		t.Fatalf("client.Anime.Show first result slug = %s, want %s", bebop.Slug, firstResultSlug)
+	const bebopMovieSlug = "cowboy-bebop-tengoku-no-tobira"
+	if got, want := bebop.Slug, bebopMovieSlug; got != want {
+		t.Fatalf("client.Anime.Show(ID=%q) slug = %s, want %s", bebopMovieID, got, want)
 	}
 
 	// Check that the anime includes castings.
-	if bebop.Castings == nil {
-		t.Fatalf("client.Anime.Show expected to include castings. %s %s castings is nil", bebop.ID, bebop.Slug)
+	if bebop.Characters == nil {
+		t.Fatalf("client.Anime.Show(ID=%q) expected to include characters.", bebopMovieID)
+	}
+	if bebop.Staff == nil {
+		t.Fatalf("client.Anime.Show(ID=%q) expected to include staff.", bebopMovieID)
 	}
 }
 
