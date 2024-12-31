@@ -6,7 +6,6 @@ go-kitsu is a Go client library for accessing the [kitsu.io API](http://docs.kit
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nstratos/go-kitsu)](https://goreportcard.com/report/github.com/nstratos/go-kitsu)
 [![Coverage Status](https://coveralls.io/repos/github/nstratos/go-kitsu/badge.svg)](https://coveralls.io/github/nstratos/go-kitsu)
-[![Build Status](https://travis-ci.org/nstratos/go-kitsu.svg?branch=master)](https://travis-ci.org/nstratos/go-kitsu)
 [![Test Status](https://github.com/nstratos/go-kitsu/workflows/tests/badge.svg)](https://github.com/nstratos/go-kitsu/actions?query=workflow%3Atests)
 [![Integration Status](https://github.com/nstratos/go-kitsu/workflows/integration/badge.svg)](https://github.com/nstratos/go-kitsu/actions?query=workflow%3Aintegration)
 
